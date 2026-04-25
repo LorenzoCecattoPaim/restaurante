@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RestaurOS — Cozinha</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #0a0b0d;
+      --surface: #111214;
+      --raised:  #18191e;
+      --border:  #252630;
+      --accent:  #4f6ef7;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger:  #ef4444;
+      --info:    #38bdf8;
+      --text:    #ecedf2;
+      --muted:   #5a5b68;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 15px; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    .kds-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .kds-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .95rem;
+      font-weight: 700;
+    }
+
+    .kds-logo-icon {
+      background: var(--warning);
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+    }
+
+    .kds-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .kds-live {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .kds-live::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: blink 1.4s infinite;
+    }
+
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+
+    .kds-clock {
+      font-family: 'DM Mono', monospace;
+      font-size: .85rem;
+    }
+
+    .btn-logout-kds {
+      background: var(--raised);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      padding: 5px 12px;
+      font-size: .75rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .12s;
+    }
+    .btn-logout-kds:hover { color: var(--text); }
+
+    /* ── Board ── */
+    .kds-board {
+      flex: 1;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      align-content: start;
+      overflow-y: auto;
+    }
+
+    /* ── Order ticket ── */
+    .ticket {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color .15s, transform .15s;
+      animation: ticket-in .25s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    @keyframes ticket-in {
+      from { opacity: 0; transform: scale(.95) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .ticket:hover {
+      border-color: rgba(79,110,247,.4);
+      transform: translateY(-2px);
+    }
+
+    /* Status color accents */
+    .ticket[data-status="recebido"]   { border-top: 3px solid var(--info); }
+    .ticket[data-status="em_preparo"] { border-top: 3px solid var(--warning); }
+    .ticket[data-status="pronto"]     { border-top: 3px solid var(--success); opacity: .7; }
+
+    .ticket-header {
+      background: var(--raised);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ticket-id {
+      font-family: 'DM Mono', monospace;
+      font-size: .75rem;
+      color: var(--muted);
+    }
+
+    .ticket-table {
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+
+    .ticket-status {
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 99px;
+    }
+
+    .ticket-status.recebido   { background: rgba(56,189,248,.15); color: var(--info); }
+    .ticket-status.em_preparo { background: rgba(245,158,11,.15); color: var(--warning); }
+    .ticket-status.pronto     { background: rgba(34,197,94,.15);  color: var(--success); }
+
+    .ticket-body {
+      padding: 12px 14px;
+      flex: 1;
+    }
+
+    .ticket-customer {
+      font-size: .78rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .ticket-note {
+      font-size: .78rem;
+      background: rgba(245,158,11,.1);
+      border: 1px solid rgba(245,158,11,.2);
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: var(--warning);
+      margin-bottom: 10px;
+    }
+
+    .ticket-items { display: flex; flex-direction: column; gap: 6px; }
+
+    .ticket-item {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      font-size: .875rem;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ticket-item:last-child { border-bottom: none; }
+
+    .ticket-qty {
+      font-family: 'DM Mono', monospace;
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--warning);
+      min-width: 22px;
+    }
+
+    .ticket-footer {
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ticket-timer {
+      font-family: 'DM Mono', monospace;
+      font-size: .8rem;
+    }
+
+    .ticket-timer.urgent { color: var(--danger); font-weight: 700; }
+    .ticket-timer.warn   { color: var(--warning); }
+    .ticket-timer.ok     { color: var(--muted); }
+
+    .btn-advance {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .12s;
+      white-space: nowrap;
+    }
+
+    .btn-advance.start  { background: var(--accent); color: #fff; }
+    .btn-advance.start:hover { opacity: .9; }
+    .btn-advance.done   { background: rgba(34,197,94,.15); color: var(--success); border: 1px solid rgba(34,197,94,.25); }
+    .btn-advance.done:hover { background: rgba(34,197,94,.25); }
+    .btn-advance.finish { background: var(--raised); color: var(--muted); border: 1px solid var(--border); cursor: default; }
+
+    /* ── Empty ── */
+    .kds-empty {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      color: var(--muted);
+      text-align: center;
+      gap: 10px;
+    }
+
+    .kds-empty-icon { font-size: 3rem; }
+    .kds-empty-title { font-size: 1rem; font-weight: 600; color: #7a7b8a; }
+    .kds-empty-sub   { font-size: .8rem; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="kds-header">
+  <div class="kds-logo">
+    <div class="kds-logo-icon">👨‍🍳</div>
+    RestaurOS · Cozinha
+  </div>
+  <div class="kds-meta">
+    <div class="kds-live">Ao vivo</div>
+    <div class="kds-clock" id="clock">--:--:--</div>
+    <button class="btn-logout-kds" onclick="doLogout()">Sair</button>
+  </div>
+</header>
+
+<!-- Board de tickets -->
+<div class="kds-board" id="kds-board">
+  <div class="kds-empty">
+    <div class="kds-empty-icon">🍽️</div>
+    <div class="kds-empty-title">Carregando pedidos…</div>
+  </div>
+</div>
+
+<script>
+// ─── Auth ────────────────────────────────────────────────────
+const token = localStorage.getItem('rs_token');
+if (!token) window.location.href = '/login';
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+async function doLogout() {
+  await fetch('/api/auth/logout', { method: 'POST', headers: authHeaders() }).catch(() => {});
+  localStorage.removeItem('rs_token');
+  localStorage.removeItem('rs_user');
+  window.location.href = '/login';
+}
+
+// ─── Estado ──────────────────────────────────────────────────
+let _orders    = [];
+let _known     = new Set();
+let _audioCtx  = null;
+
+const SHOW_STATUSES = ['recebido', 'em_preparo', 'pronto'];
+
+const STATUS_FLOW = {
+  recebido:   { next: 'em_preparo', label: '▶ Iniciar preparo', cls: 'start' },
+  em_preparo: { next: 'pronto',     label: '✓ Pronto',          cls: 'done'  },
+  pronto:     { next: null,         label: '✓ Aguardando entrega', cls: 'finish' },
+};
+
+// ─── Relógio ─────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('pt-BR');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─── Timers visuais ──────────────────────────────────────────
+function elapsed(iso) {
+  const mins = Math.floor((Date.now() - new Date(iso)) / 60000);
+  return mins;
+}
+
+function timerClass(mins) {
+  if (mins >= 15) return 'urgent';
+  if (mins >= 8)  return 'warn';
+  return 'ok';
+}
+
+function timerLabel(mins) {
+  if (mins < 1) return 'Agora';
+  if (mins < 60) return `${mins}min`;
+  return `${Math.floor(mins/60)}h${mins%60}m`;
+}
+
+// ─── Render ──────────────────────────────────────────────────
+function render() {
+  const board   = document.getElementById('kds-board');
+  const visible = _orders.filter(o => SHOW_STATUSES.includes(o.status));
+
+  if (!visible.length) {
+    board.innerHTML = `
+      <div class="kds-empty">
+        <div class="kds-empty-icon">✅</div>
+        <div class="kds-empty-title">Tudo em dia!</div>
+        <div class="kds-empty-sub">Nenhum pedido pendente no momento</div>
+      </div>`;
+    return;
+  }
+
+  // Ordena: recebido → em_preparo → pronto, depois por hora
+  const sorted = [...visible].sort((a, b) => {
+    const statusOrder = { recebido: 0, em_preparo: 1, pronto: 2 };
+    if (statusOrder[a.status] !== statusOrder[b.status])
+      return statusOrder[a.status] - statusOrder[b.status];
+    return new Date(a.createdAt) - new Date(b.createdAt);
+  });
+
+  board.innerHTML = sorted.map(renderTicket).join('');
+}
+
+function renderTicket(o) {
+  const flow  = STATUS_FLOW[o.status] || {};
+  const mins  = elapsed(o.createdAt);
+  const cls   = timerClass(mins);
+
+  const items = o.items.map(i => `
+    <div class="ticket-item">
+      <span class="ticket-qty">${i.quantity}×</span>
+      <span>${i.productName}</span>
+    </div>`).join('');
+
+  const noteHtml = o.notes
+    ? `<div class="ticket-note">⚠️ ${o.notes}</div>`
+    : '';
+
+  const btnHtml = flow.next
+    ? `<button class="btn-advance ${flow.cls}" onclick="advance(${o.id})">${flow.label}</button>`
+    : `<button class="btn-advance finish" disabled>${flow.label}</button>`;
+
+  return `
+    <div class="ticket" data-status="${o.status}" data-id="${o.id}">
+      <div class="ticket-header">
+        <div>
+          <div class="ticket-id">#${String(o.id).padStart(4,'0')}</div>
+          <div class="ticket-table">Mesa ${o.tableNumber}</div>
+        </div>
+        <span class="ticket-status ${o.status}">${labelStatus(o.status)}</span>
+      </div>
+      <div class="ticket-body">
+        <div class="ticket-customer">👤 ${o.customerName}</div>
+        ${noteHtml}
+        <div class="ticket-items">${items}</div>
+      </div>
+      <div class="ticket-footer">
+        <span class="ticket-timer ${cls}">🕐 ${timerLabel(mins)}</span>
+        ${btnHtml}
+      </div>
+    </div>`;
+}
+
+function labelStatus(s) {
+  return { recebido:'Recebido', em_preparo:'Em preparo', pronto:'Pronto' }[s] || s;
+}
+
+// ─── Avançar status ──────────────────────────────────────────
+async function advance(id) {
+  const order = _orders.find(o => o.id === id);
+  if (!order || !STATUS_FLOW[order.status]?.next) return;
+
+  const next = STATUS_FLOW[order.status].next;
+
+  // Otimismo
+  const idx = _orders.findIndex(o => o.id === id);
+  const bak = { ..._orders[idx] };
+  _orders[idx].status = next;
+  render();
+
+  try {
+    await fetch(`/api/orders/${id}/status`, {
+      method:  'PUT',
+      headers: authHeaders(),
+      body:    JSON.stringify({ status: next }),
+    });
+    if (next === 'pronto') playDone();
+  } catch {
+    _orders[idx] = bak;
+    render();
+    alert('Erro ao atualizar. Tente novamente.');
+  }
+}
+
+// ─── Polling + novo pedido ────────────────────────────────────
+async function fetchOrders() {
+  try {
+    const res  = await fetch('/api/orders', { headers: authHeaders() });
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const data = await res.json();
+    const orders = data.data || [];
+
+    const newOnes = orders.filter(o =>
+      o.status === 'recebido' && !_known.has(o.id)
+    );
+    if (newOnes.length && _known.size > 0) {
+      playNewOrder();
+      // Pisca o título da aba
+      document.title = `🔔 ${newOnes.length} novo(s) pedido(s)!`;
+      setTimeout(() => { document.title = 'RestaurOS — Cozinha'; }, 3000);
+    }
+
+    orders.forEach(o => _known.add(o.id));
+    _orders = orders;
+    render();
+  } catch {}
+}
+
+// ─── Sons ────────────────────────────────────────────────────
+function getAudio() {
+  if (!_audioCtx)
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+
+function playNewOrder() {
+  try {
+    const ctx = getAudio();
+    // 3 bipes ascendentes
+    [[440, 0], [550, 0.18], [660, 0.36]].forEach(([freq, delay]) => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'square';
+      g.gain.setValueAtTime(0.25, ctx.currentTime + delay);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.25);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.25);
+    });
+  } catch {}
+}
+
+function playDone() {
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const g   = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.frequency.value = 880;
+    osc.type = 'sine';
+    g.gain.setValueAtTime(0.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  } catch {}
+}
+
+// ─── Atualiza timers a cada 30s sem re-fetch ─────────────────
+function refreshTimers() {
+  document.querySelectorAll('.ticket-timer').forEach(el => {
+    const ticket = el.closest('.ticket');
+    const id     = parseInt(ticket?.dataset.id);
+    const order  = _orders.find(o => o.id === id);
+    if (!order) return;
+    const mins = elapsed(order.createdAt);
+    el.className    = `ticket-timer ${timerClass(mins)}`;
+    el.textContent  = `🕐 ${timerLabel(mins)}`;
+  });
+}
+
+// ─── Start ───────────────────────────────────────────────────
+fetchOrders();
+setInterval(fetchOrders, 8000);
+setInterval(refreshTimers, 30000);
+
+// Ativa AudioContext ao primeiro clique (requerido por browsers)
+document.addEventListener('click', () => { try { getAudio(); } catch {} }, { once: true });
+</script>
+</body>
+</html>

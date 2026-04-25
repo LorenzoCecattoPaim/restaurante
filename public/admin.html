@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RestaurOS — Admin</title>
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🍽️</div>
+      <div class="sidebar-logo-text">Restau<span>rOS</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">Visão geral</div>
+      <button class="nav-item" data-nav="dashboard">
+        <span class="nav-icon">◈</span> Dashboard
+      </button>
+
+      <div class="nav-label">Operação</div>
+      <button class="nav-item" data-nav="orders">
+        <span class="nav-icon">📋</span> Pedidos
+        <span class="nav-badge" id="orders-badge" style="display:none">0</span>
+      </button>
+
+      <div class="nav-label">Cardápio</div>
+      <button class="nav-item" data-nav="products">
+        <span class="nav-icon">🛍️</span> Produtos
+      </button>
+
+      <div class="nav-label">Sistema</div>
+      <button class="nav-item" data-nav="settings">
+        <span class="nav-icon">⚙️</span> Configurações
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="user-name">Admin</div>
+          <div class="sidebar-user-role" id="user-role">Gerente</div>
+        </div>
+      </div>
+      <button class="nav-item" id="btn-logout" style="margin-top:6px;color:var(--danger)">
+        <span class="nav-icon">↩</span> Sair
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══ HEADER ════════════════════════════════════════════════ -->
+  <header class="app-header">
+    <h1 class="header-title" id="header-title">Dashboard</h1>
+    <div class="header-actions">
+      <span id="polling-indicator" style="font-size:.72rem;color:var(--success);opacity:0;transition:opacity .3s;display:flex;align-items:center;gap:4px"></span>
+      <a href="/kitchen" class="btn btn-ghost btn-sm" target="_blank">👨‍🍳 Cozinha</a>
+      <a href="/?mesa=1" class="btn btn-ghost btn-sm" target="_blank">📱 Cardápio</a>
+    </div>
+  </header>
+
+  <!-- ══ MAIN ══════════════════════════════════════════════════ -->
+  <main class="app-main">
+
+    <!-- ── DASHBOARD ── -->
+    <section id="section-dashboard" class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Dashboard</h2>
+          <p class="section-subtitle" id="dash-date">Hoje</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="Dashboard.load()">↻ Atualizar</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">📦</div>
+          <div class="stat-value" id="stat-orders">—</div>
+          <div class="stat-label">Pedidos hoje</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">💰</div>
+          <div class="stat-value" id="stat-revenue" style="font-size:1.3rem">—</div>
+          <div class="stat-label">Faturamento hoje</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon amber">🎯</div>
+          <div class="stat-value" id="stat-avg" style="font-size:1.3rem">—</div>
+          <div class="stat-label">Ticket médio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">⏳</div>
+          <div class="stat-value" id="stat-pending">—</div>
+          <div class="stat-label">Em aberto</div>
+        </div>
+      </div>
+
+      <!-- Gráfico + Top itens -->
+      <div class="two-col" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-title">📈 Receita por hora (hoje)</div>
+          <div id="revenue-chart" style="min-height:100px"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 Status dos pedidos</div>
+          <div class="status-grid">
+            <div class="status-mini">
+              <div class="status-mini-value" style="color:var(--info)"    id="status-recebido">—</div>
+              <div class="status-mini-label">Recebidos</div>
+            </div>
+            <div class="status-mini">
+              <div class="status-mini-value" style="color:var(--warning)" id="status-em_preparo">—</div>
+              <div class="status-mini-label">Em preparo</div>
+            </div>
+            <div class="status-mini">
+              <div class="status-mini-value" style="color:var(--success)" id="status-pronto">—</div>
+              <div class="status-mini-label">Prontos</div>
+            </div>
+            <div class="status-mini">
+              <div class="status-mini-value" style="color:var(--text-muted)" id="status-entregue">—</div>
+              <div class="status-mini-label">Entregues</div>
+            </div>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="App.navigate('orders')">Ver pedidos</button>
+            <button class="btn btn-ghost btn-sm"   onclick="App.navigate('products')">Produtos</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top itens -->
+      <div class="card">
+        <div class="card-title">🏆 Mais vendidos hoje</div>
+        <div class="top-items" id="top-items-list">
+          <div class="empty-state" style="padding:24px"><div class="empty-state-desc">Carregando…</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PEDIDOS ── -->
+    <section id="section-orders" class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Pedidos</h2>
+          <p class="section-subtitle">Atualiza automaticamente a cada 8s</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btn-refresh-orders">↻ Atualizar</button>
+      </div>
+
+      <div style="margin-bottom:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="filter-tabs">
+          <button class="filter-tab orders-filter-tab active" data-status="all">Todos</button>
+          <button class="filter-tab orders-filter-tab" data-status="recebido">Recebidos</button>
+          <button class="filter-tab orders-filter-tab" data-status="em_preparo">Em preparo</button>
+          <button class="filter-tab orders-filter-tab" data-status="pronto">Prontos</button>
+          <button class="filter-tab orders-filter-tab" data-status="entregue">Entregues</button>
+          <button class="filter-tab orders-filter-tab" data-status="cancelado">Cancelados</button>
+        </div>
+      </div>
+
+      <div class="orders-board" id="orders-board">
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-state-desc">Carregando…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PRODUTOS ── -->
+    <section id="section-products" class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Produtos</h2>
+          <p class="section-subtitle">Cardápio e disponibilidade</p>
+        </div>
+        <button class="btn btn-primary" id="btn-new-product">+ Novo produto</button>
+      </div>
+
+      <!-- Categorias -->
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-title">🏷️ Categorias</div>
+        <div id="cat-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="new-cat-input" class="form-control" style="max-width:220px"
+            placeholder="Nova categoria…" type="text" />
+          <button class="btn btn-ghost btn-sm" id="btn-add-cat">+ Adicionar</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="products-search" placeholder="Buscar…" />
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="form-control" id="products-cat-filter" style="width:auto;font-size:.8rem">
+              <option value="all">Todas as categorias</option>
+            </select>
+            <div class="filter-tabs">
+              <button class="filter-tab status-filter-tab active" data-status="all">Todos</button>
+              <button class="filter-tab status-filter-tab" data-status="active">Ativos</button>
+              <button class="filter-tab status-filter-tab" data-status="inactive">Inativos</button>
+            </div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:60px">Foto</th>
+              <th>Produto</th>
+              <th>Categoria</th>
+              <th>Preço</th>
+              <th>Ativo</th>
+              <th style="width:170px">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="products-tbody">
+            <tr><td colspan="6">
+              <div class="empty-state" style="padding:40px">
+                <div class="empty-state-desc">Carregando…</div>
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── CONFIGURAÇÕES ── -->
+    <section id="section-settings" class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Configurações</h2>
+          <p class="section-subtitle">Dados do restaurante</p>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">🏪 Dados do restaurante</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Nome do restaurante</label>
+              <input id="set-name" class="form-control" type="text" placeholder="Ex: Burguer House" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Endereço</label>
+              <input id="set-address" class="form-control" type="text" placeholder="Rua, número, bairro" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Telefone / WhatsApp</label>
+              <input id="set-phone" class="form-control" type="text" placeholder="(00) 00000-0000" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Abre às</label>
+                <input id="set-open" class="form-control" type="time" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Fecha às</label>
+                <input id="set-close" class="form-control" type="time" />
+              </div>
+            </div>
+            <button class="btn btn-primary" id="btn-save-settings">Salvar configurações</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔗 Links do sistema</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Cardápio (cliente)</label>
+              <div style="display:flex;gap:8px">
+                <input class="form-control" type="text" value="/?mesa=1" readonly style="opacity:.6" />
+                <a href="/?mesa=1" target="_blank" class="btn btn-ghost btn-sm">Abrir</a>
+              </div>
+              <span style="font-size:.72rem;color:var(--text-muted)">Troque o número da mesa na URL. Use QR Code para cada mesa.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tela da cozinha (KDS)</label>
+              <div style="display:flex;gap:8px">
+                <input class="form-control" type="text" value="/kitchen" readonly style="opacity:.6" />
+                <a href="/kitchen" target="_blank" class="btn btn-ghost btn-sm">Abrir</a>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Painel admin</label>
+              <div style="display:flex;gap:8px">
+                <input class="form-control" type="text" value="/admin" readonly style="opacity:.6" />
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:20px">
+            <div class="card-title">👥 Usuários (MVP)</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-raised);border-radius:6px">
+                <div>
+                  <div style="font-size:.85rem;font-weight:600">admin</div>
+                  <div style="font-size:.72rem;color:var(--text-muted)">Gerente · Acesso total</div>
+                </div>
+                <span class="badge badge-active">● Ativo</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-raised);border-radius:6px">
+                <div>
+                  <div style="font-size:.85rem;font-weight:600">cozinha</div>
+                  <div style="font-size:.72rem;color:var(--text-muted)">Cozinheiro · Apenas KDS</div>
+                </div>
+                <span class="badge badge-active">● Ativo</span>
+              </div>
+            </div>
+            <p style="font-size:.72rem;color:var(--text-muted);margin-top:8px">
+              Gestão de usuários completa disponível na próxima versão.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- /app-layout -->
+
+<!-- ══ MODAL — PRODUTO ════════════════════════════════════════ -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-title">Novo produto</h3>
+      <button class="modal-close" id="btn-close-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="product-form" onsubmit="return false">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Nome *</label>
+            <input id="field-name" class="form-control" type="text" placeholder="Ex: X-Burguer Clássico" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descrição</label>
+            <textarea id="field-description" class="form-control" placeholder="Ingredientes e diferenciais…"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Preço (R$) *</label>
+              <input id="field-price" class="form-control" type="number" step="0.01" min="0" placeholder="0,00" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Categoria *</label>
+              <select id="field-category" class="form-control" data-categories>
+                <option value="">Selecione…</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">URL da imagem</label>
+            <input id="field-image" class="form-control" type="url" placeholder="https://…" />
+            <img id="img-preview" src="" alt=""
+              style="margin-top:8px;display:none;width:100%;height:100px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"
+              onload="this.style.display='block'" onerror="this.style.display='none'" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Disponibilidade</label>
+            <div class="toggle-wrap">
+              <label class="toggle">
+                <input type="checkbox" id="field-active" checked />
+                <span class="toggle-slider"></span>
+              </label>
+              <span style="font-size:.85rem;color:var(--text-secondary)">Produto ativo no cardápio</span>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-cancel-modal">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-product">Salvar produto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="/js/api.js"></script>
+<script src="/js/ui.js"></script>
+<script src="/js/products.js"></script>
+<script src="/js/orders.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="/js/settings.js"></script>
+<script src="/js/app.js"></script>
+
+<script>
+  // Data de hoje no subtitle
+  document.getElementById('dash-date').textContent =
+    new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' });
+</script>
+</body>
+</html>

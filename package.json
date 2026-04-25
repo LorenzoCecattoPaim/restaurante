@@ -1,0 +1,16 @@
+{
+  "name": "restauros",
+  "version": "1.0.0",
+  "description": "Sistema de gestão para restaurante — Node.js puro, zero dependências",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["restaurante", "gestao", "pedidos", "mvp", "nodejs"],
+  "author": "",
+  "license": "MIT"
+}

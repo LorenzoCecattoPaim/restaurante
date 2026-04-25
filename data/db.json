@@ -1,0 +1,234 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "X-Burguer Clássico",
+      "description": "Pão brioche, blend 180g, queijo cheddar, alface, tomate e molho especial",
+      "price": 28.9,
+      "category": "Lanches",
+      "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400",
+      "active": true,
+      "createdAt": "2026-04-25T11:19:19.608Z"
+    },
+    {
+      "id": 2,
+      "name": "X-Bacon Duplo",
+      "description": "Pão brioche, dois blends 150g, bacon crocante, queijo prato, cebola caramelizada",
+      "price": 38.9,
+      "category": "Lanches",
+      "image": "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=400",
+      "active": true,
+      "createdAt": "2026-04-25T11:19:19.609Z"
+    },
+    {
+      "id": 3,
+      "name": "Fritas Grandes",
+      "description": "Porção generosa de batatas fritas crocantes com sal temperado",
+      "price": 18.9,
+      "category": "Acompanhamentos",
+      "image": "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400",
+      "active": true,
+      "createdAt": "2026-04-25T11:19:19.609Z"
+    },
+    {
+      "id": 4,
+      "name": "Coca-Cola 350ml",
+      "description": "Lata gelada",
+      "price": 7,
+      "category": "Bebidas",
+      "image": "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400",
+      "active": true,
+      "createdAt": "2026-04-25T11:19:19.609Z"
+    },
+    {
+      "id": 5,
+      "name": "Milk Shake Chocolate",
+      "description": "Sorvete premium, leite integral, calda de chocolate belga",
+      "price": 22.9,
+      "category": "Bebidas",
+      "image": "https://images.unsplash.com/photo-1572490122747-3a3c35d6b4f0?w=400",
+      "active": true,
+      "createdAt": "2026-04-25T11:19:19.609Z"
+    },
+    {
+      "id": 6,
+      "name": "Onion Rings",
+      "description": "Anéis de cebola empanados, crocantes, com molho ranch",
+      "price": 16.9,
+      "category": "Acompanhamentos",
+      "image": "https://images.unsplash.com/photo-1639024471283-03518883512d?w=400",
+      "active": false,
+      "createdAt": "2026-04-25T11:19:19.609Z"
+    },
+    {
+      "id": 7,
+      "name": "Brownie com Sorvete",
+      "description": "Brownie quentinho de chocolate com uma bola de sorvete de baunilha",
+      "price": 19.9,
+      "category": "Sobremesas",
+      "image": "https://images.unsplash.com/photo-1606313564004-4cb8b5f56f8d?w=400",
+      "active": true,
+      "createdAt": "2026-04-25T11:19:19.609Z"
+    },
+    {
+      "id": 8,
+      "name": "Pizza Margherita",
+      "description": "",
+      "price": 45.9,
+      "category": "Lanches",
+      "image": "",
+      "active": true,
+      "createdAt": "2026-04-25T11:19:21.795Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": 1,
+      "tableNumber": "05",
+      "customerName": "João Silva",
+      "items": [
+        {
+          "productId": 1,
+          "productName": "X-Burguer Clássico",
+          "quantity": 2,
+          "unitPrice": 28.9
+        },
+        {
+          "productId": 3,
+          "productName": "Fritas Grandes",
+          "quantity": 1,
+          "unitPrice": 18.9
+        },
+        {
+          "productId": 4,
+          "productName": "Coca-Cola 350ml",
+          "quantity": 2,
+          "unitPrice": 7
+        }
+      ],
+      "total": 90.7,
+      "status": "em_preparo",
+      "notes": "",
+      "createdAt": "2026-04-25T11:11:19.609Z",
+      "updatedAt": "2026-04-25T11:14:19.609Z"
+    },
+    {
+      "id": 2,
+      "tableNumber": "12",
+      "customerName": "Maria Oliveira",
+      "items": [
+        {
+          "productId": 2,
+          "productName": "X-Bacon Duplo",
+          "quantity": 1,
+          "unitPrice": 38.9
+        },
+        {
+          "productId": 5,
+          "productName": "Milk Shake Chocolate",
+          "quantity": 1,
+          "unitPrice": 22.9
+        }
+      ],
+      "total": 61.8,
+      "status": "pronto",
+      "notes": "Sem cebola no burguer",
+      "createdAt": "2026-04-25T10:59:19.609Z",
+      "updatedAt": "2026-04-25T11:17:19.609Z"
+    },
+    {
+      "id": 3,
+      "tableNumber": "03",
+      "customerName": "Carlos Mendes",
+      "items": [
+        {
+          "productId": 1,
+          "productName": "X-Burguer Clássico",
+          "quantity": 3,
+          "unitPrice": 28.9
+        },
+        {
+          "productId": 3,
+          "productName": "Fritas Grandes",
+          "quantity": 2,
+          "unitPrice": 18.9
+        },
+        {
+          "productId": 4,
+          "productName": "Coca-Cola 350ml",
+          "quantity": 3,
+          "unitPrice": 7
+        }
+      ],
+      "total": 145.5,
+      "status": "entregue",
+      "notes": "",
+      "createdAt": "2026-04-25T10:19:19.609Z",
+      "updatedAt": "2026-04-25T10:39:19.609Z"
+    },
+    {
+      "id": 4,
+      "tableNumber": "07",
+      "customerName": "Ana Costa",
+      "items": [
+        {
+          "productId": 2,
+          "productName": "X-Bacon Duplo",
+          "quantity": 2,
+          "unitPrice": 38.9
+        },
+        {
+          "productId": 5,
+          "productName": "Milk Shake Chocolate",
+          "quantity": 2,
+          "unitPrice": 22.9
+        },
+        {
+          "productId": 3,
+          "productName": "Fritas Grandes",
+          "quantity": 1,
+          "unitPrice": 18.9
+        }
+      ],
+      "total": 141.6,
+      "status": "recebido",
+      "notes": "Urgente!",
+      "createdAt": "2026-04-25T11:17:19.609Z",
+      "updatedAt": "2026-04-25T11:18:19.609Z"
+    }
+  ],
+  "categories": [
+    "Lanches",
+    "Acompanhamentos",
+    "Bebidas",
+    "Sobremesas",
+    "Combos",
+    "Entradas"
+  ],
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "role": "admin",
+      "name": "Administrador"
+    },
+    {
+      "id": 2,
+      "username": "cozinha",
+      "password": "cozinha123",
+      "role": "kitchen",
+      "name": "Cozinha"
+    }
+  ],
+  "settings": {
+    "restaurantName": "RestaurOS",
+    "address": "Rua das Flores, 123",
+    "phone": "(54) 3333-4444",
+    "openTime": "11:00",
+    "closeTime": "23:00"
+  },
+  "sessions": {},
+  "_nextProductId": 9,
+  "_nextOrderId": 5
+}

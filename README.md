@@ -1,177 +1,158 @@
-# 🍽️ RestaurOS — Sistema de Gestão para Restaurante
+# 🍽️ RestaurOS
 
-MVP completo de autoatendimento + painel admin + tela de cozinha (KDS).  
-Construído com **Node.js puro** — zero dependências externas.
+Sistema de gestão para restaurante com autoatendimento.  
+**Node.js puro — zero dependências.**
 
 ---
 
-## 🚀 Como rodar (3 comandos)
+## 🚀 Rodar localmente
 
 ```bash
-# 1. Entre na pasta
-cd restauros
-
-# 2. Inicie o servidor
+# Requisito: Node.js 18+
 node server/server.js
 
-# 3. Acesse no navegador
-# http://localhost:3000/login
+# Com auto-reload (Node 18+)
+node --watch server/server.js
 ```
 
-> **Requisito:** Node.js 18 ou superior  
-> `node --version` para verificar
+Acesse: **http://localhost:3000/login**
+
+| Usuário   | Senha        | Acesso          |
+|-----------|--------------|-----------------|
+| `admin`   | `admin123`   | Painel completo |
+| `cozinha` | `cozinha123` | Tela da cozinha |
 
 ---
 
-## 🔐 Credenciais
+## ☁️ Deploy — Railway (recomendado, gratuito)
 
-| Usuário   | Senha        | Acesso              |
-|-----------|--------------|---------------------|
-| `admin`   | `admin123`   | Painel completo     |
-| `cozinha` | `cozinha123` | Apenas tela KDS     |
+Railway conecta direto no GitHub e faz deploy automático a cada push.
+
+### 1. Suba o projeto no GitHub
+
+```bash
+git init
+git add .
+git commit -m "feat: RestaurOS MVP"
+git branch -M main
+git remote add origin https://github.com/SEU_USUARIO/restauros.git
+git push -u origin main
+```
+
+### 2. Crie o projeto no Railway
+
+1. Acesse [railway.app](https://railway.app) e faça login com GitHub
+2. Clique em **New Project** → **Deploy from GitHub repo**
+3. Selecione o repositório `restauros`
+4. Railway detecta o `package.json` e faz deploy automaticamente
+
+### 3. Configure variáveis de ambiente
+
+No painel do Railway → aba **Variables**, adicione:
+
+```
+NODE_ENV=production
+ADMIN_USER=admin
+ADMIN_PASS=SuaSenhaForte123
+KITCHEN_USER=cozinha
+KITCHEN_PASS=SenhaCozinha456
+RESTAURANT_NAME=Nome do Seu Restaurante
+```
+
+> Troque as senhas — as padrão são só para desenvolvimento.
+
+### 4. Gere uma URL pública
+
+Railway → aba **Settings** → **Domains** → **Generate Domain**
+
+Você receberá algo como: `restauros-production.up.railway.app`
+
+### 5. Pronto
+
+- Cardápio: `https://sua-url.railway.app/?mesa=5`
+- Admin:    `https://sua-url.railway.app/admin`
+- Cozinha:  `https://sua-url.railway.app/kitchen`
 
 ---
 
-## 📱 URLs do sistema
+## ☁️ Deploy alternativo — Render (gratuito)
 
-| Tela               | URL                                  |
-|--------------------|--------------------------------------|
-| Login              | http://localhost:3000/login          |
-| Admin / Dashboard  | http://localhost:3000/admin          |
-| Cozinha (KDS)      | http://localhost:3000/kitchen        |
-| Cardápio (cliente) | http://localhost:3000/?mesa=5        |
-
-> O número da mesa é passado via query string (`?mesa=N`).  
-> Em produção, gere um QR Code para cada mesa apontando para essa URL.
+1. Acesse [render.com](https://render.com) → **New Web Service**
+2. Conecte o repositório GitHub
+3. Configure:
+   - **Start Command:** `node server/server.js`
+   - **Environment:** Node
+4. Adicione as mesmas variáveis de ambiente acima
+5. Clique em **Create Web Service**
 
 ---
 
-## 📁 Estrutura de arquivos
+## ⚠️ Persistência em produção
+
+O filesystem do Railway e Render é efêmero — dados somem a cada deploy.
+
+Em produção o banco roda em memória (dados do dia ficam no ar, mas um novo deploy reseta).
+
+**Solução A — Railway Volume (mais simples):**
+1. No painel Railway, adicione um **Volume** ao serviço
+2. Mount path: `/app/data`
+3. Mude a variável: `NODE_ENV=development`
+
+**Solução B — PostgreSQL (para produção séria):**
+Railway oferece PostgreSQL gratuito. Basta adicionar o serviço no painel e substituir `server/db.js` por uma versão que use `pg`.
+
+---
+
+## 📁 Estrutura
 
 ```
 restauros/
-├── data/
-│   └── db.json              ← Banco de dados (criado automaticamente)
-│
 ├── public/
 │   ├── css/
-│   │   ├── admin.css        ← Design system do painel (dark SaaS)
-│   │   └── menu.css         ← Estilo do cardápio público
+│   │   ├── admin.css        design system dark SaaS
+│   │   └── menu.css         estilo do cardápio
 │   ├── js/
-│   │   ├── api.js           ← Cliente HTTP (fetch centralizado + auth)
-│   │   ├── ui.js            ← Toast, Modal, formatters, chart SVG
-│   │   ├── app.js           ← Bootstrap, auth guard, navegação
-│   │   ├── dashboard.js     ← Métricas + gráfico de receita por hora
-│   │   ├── products.js      ← CRUD de produtos + categorias
-│   │   ├── orders.js        ← Pedidos + polling + som + impressão
-│   │   └── settings.js      ← Configurações do restaurante
-│   ├── admin.html           ← Painel administrativo completo
-│   ├── kitchen.html         ← KDS — tela da cozinha
-│   ├── login.html           ← Autenticação
-│   └── index.html           ← Cardápio (autoatendimento do cliente)
-│
+│   │   ├── api.js           cliente HTTP + auth automática
+│   │   ├── ui.js            toast, modal, formatters, chart
+│   │   ├── app.js           bootstrap + navegação + auth guard
+│   │   ├── dashboard.js     métricas + gráfico por hora
+│   │   ├── products.js      CRUD produtos + categorias
+│   │   ├── orders.js        pedidos + polling + som + impressão
+│   │   └── settings.js      configurações do restaurante
+│   ├── admin.html           painel administrativo
+│   ├── kitchen.html         KDS — tela da cozinha
+│   ├── login.html           autenticação
+│   └── index.html           cardápio do cliente
 ├── server/
-│   ├── server.js            ← HTTP server + arquivos estáticos
-│   ├── routes.js            ← Roteador da API REST
-│   ├── controllers.js       ← Lógica de negócio
-│   ├── auth.js              ← Autenticação, sessões, settings, categorias
-│   └── db.js                ← Persistência JSON em arquivo
-│
-├── package.json
-└── README.md
+│   ├── server.js            HTTP server + arquivos estáticos
+│   ├── routes.js            roteador da API REST
+│   ├── controllers.js       lógica de negócio
+│   ├── auth.js              sessões, login, categorias, settings
+│   └── db.js                JSON em arquivo (dev) ou memória (prod)
+├── railway.json             config de deploy Railway
+├── Procfile                 config de deploy Render/Heroku
+├── .gitignore
+└── package.json
 ```
 
 ---
 
 ## 🔌 API REST
 
-### Pública (sem autenticação)
-| Método | Rota             | Descrição                   |
-|--------|------------------|-----------------------------|
-| GET    | /api/categories  | Listar categorias           |
-| GET    | /api/products    | Listar produtos ativos      |
-| POST   | /api/orders      | Criar pedido (cliente)      |
-| POST   | /api/auth/login  | Fazer login                 |
-| POST   | /api/auth/logout | Fazer logout                |
+### Públicas (sem auth)
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | /api/auth/login | Login |
+| GET | /api/categories | Categorias |
+| GET | /api/products | Produtos ativos |
+| POST | /api/orders | Criar pedido |
 
-### Protegida (requer Bearer token)
-| Método | Rota                      | Descrição              |
-|--------|---------------------------|------------------------|
-| GET    | /api/dashboard            | Métricas do dia        |
-| POST   | /api/products             | Criar produto          |
-| PUT    | /api/products/:id         | Editar produto         |
-| DELETE | /api/products/:id         | Remover produto        |
-| GET    | /api/orders               | Listar pedidos         |
-| PUT    | /api/orders/:id/status    | Atualizar status       |
-| GET    | /api/settings             | Ver configurações      |
-| PUT    | /api/settings             | Salvar configurações   |
-| POST   | /api/categories           | Criar categoria        |
-| DELETE | /api/categories/:nome     | Remover categoria      |
-
----
-
-## ✨ Funcionalidades implementadas
-
-### Painel Admin
-- ✅ Dashboard com métricas em tempo real (pedidos, faturamento, ticket médio)
-- ✅ Gráfico de barras SVG — receita por hora
-- ✅ Top 5 itens mais vendidos com barra de progresso
-- ✅ CRUD completo de produtos com modal
-- ✅ Toggle ativo/inativo inline na tabela
-- ✅ Filtro por categoria, status e busca por texto
-- ✅ Gestão de categorias (criar/remover)
-- ✅ Gestão de pedidos com filtro por status
-- ✅ Avanço de status com feedback otimista (UI atualiza antes da API)
-- ✅ Cancelamento de pedidos
-- ✅ Impressão de comanda via window.print()
-- ✅ Configurações do restaurante
-
-### Cozinha (KDS)
-- ✅ Tickets coloridos por status (azul/laranja/verde)
-- ✅ Timer de urgência por tempo de espera (verde → amarelo → vermelho)
-- ✅ Bipe sonoro para novos pedidos (Web Audio API)
-- ✅ Pisca a aba do browser ao receber pedido
-- ✅ Observações do cliente destacadas em amarelo
-- ✅ Polling automático a cada 8s
-
-### Autenticação
-- ✅ Login com token de sessão (válido por 8h)
-- ✅ Redirect automático por role (admin → /admin, cozinha → /kitchen)
-- ✅ Auth guard no frontend (redireciona para /login se sem token)
-- ✅ Proteção de rotas na API (401 sem token)
-
-### Cardápio (Cliente)
-- ✅ Listagem por categorias com tabs
-- ✅ Carrinho com controle de quantidade
-- ✅ Envio de pedido com número da mesa e nome
-- ✅ Campo de observações por pedido
-
----
-
-## 🗺️ Próximos passos (roadmap)
-
-| Prioridade | Feature                              | Esforço |
-|------------|--------------------------------------|---------|
-| 🔴 Alta    | Migrar para SQLite (better-sqlite3)  | 2h      |
-| 🔴 Alta    | Troca de senha para usuários         | 1h      |
-| 🟡 Média   | WebSocket (substituir polling)       | 3h      |
-| 🟡 Média   | Upload de imagem (multer)            | 2h      |
-| 🟡 Média   | QR Code generator para mesas        | 1h      |
-| 🟢 Baixa   | Histórico de pedidos com filtro de data | 3h  |
-| 🟢 Baixa   | Exportar relatório CSV               | 2h      |
-| 🟢 Baixa   | PWA completo (offline, ícone)        | 2h      |
-
----
-
-## 🛠️ Desenvolvimento no VS Code
-
-Extensões recomendadas:
-- **REST Client** — testar a API direto no editor
-- **Live Server** — não necessário (o Node já serve os estáticos)
-- **Prettier** — formatação de código
-- **ESLint** — linting
-
-Para auto-reload durante desenvolvimento:
-```bash
-node --watch server/server.js
-```
+### Protegidas (Bearer token)
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | /api/dashboard | Métricas do dia |
+| POST/PUT/DELETE | /api/products/:id | CRUD produtos |
+| GET | /api/orders | Listar pedidos |
+| PUT | /api/orders/:id/status | Atualizar status |
+| GET/PUT | /api/settings | Configurações |
+| POST/DELETE | /api/categories | Categorias |

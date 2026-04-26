@@ -195,6 +195,30 @@
       "notes": "Urgente!",
       "createdAt": "2026-04-25T11:17:19.609Z",
       "updatedAt": "2026-04-25T11:18:19.609Z"
+    },
+    {
+      "id": 5,
+      "tableNumber": "—",
+      "customerName": "Cliente",
+      "items": [
+        {
+          "productId": 1,
+          "productName": "X-Burguer Clássico",
+          "quantity": 1,
+          "unitPrice": 28.9
+        },
+        {
+          "productId": 3,
+          "productName": "Fritas Grandes",
+          "quantity": 1,
+          "unitPrice": 18.9
+        }
+      ],
+      "total": 47.8,
+      "status": "recebido",
+      "notes": "",
+      "createdAt": "2026-04-26T13:19:35.164Z",
+      "updatedAt": "2026-04-26T13:19:35.164Z"
     }
   ],
   "categories": [
@@ -228,7 +252,15 @@
     "openTime": "11:00",
     "closeTime": "23:00"
   },
-  "sessions": {},
+  "sessions": {
+    "59d306df624b94709ef55d113d88239009912b84706633ab6371e2946b7ef850": {
+      "userId": 2,
+      "username": "cozinha",
+      "role": "kitchen",
+      "name": "Cozinha",
+      "createdAt": 1777209620229
+    }
+  },
   "_nextProductId": 9,
-  "_nextOrderId": 5
+  "_nextOrderId": 6
 }

@@ -1,0 +1,14 @@
+{
+  "name": "restauros-backend",
+  "version": "1.0.0",
+  "description": "RestaurOS — API REST em Node.js puro, zero dependências",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}

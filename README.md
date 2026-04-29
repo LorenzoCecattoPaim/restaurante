@@ -1,57 +1,108 @@
-# RestaurOS — Backend (Render)
+# RestaurOS — Frontend (Vercel)
 
-API REST em Node.js puro. Zero dependências externas.
+Interface completa do sistema: cardápio, admin, cozinha e login.  
+HTML + CSS + JavaScript puro — zero dependências, zero build step.
 
-## 🚀 Deploy no Render
+---
 
-1. Suba este repositório no GitHub
-2. Em [render.com](https://render.com) → **New Web Service** → conecte o repo
-3. Configure:
-   - **Build Command:** deixe vazio
-   - **Start Command:** `node server/server.js`
-4. Adicione as variáveis de ambiente:
+## ⚙️ Configuração obrigatória antes do deploy
 
-```
-NODE_ENV=production
-ADMIN_USER=admin
-ADMIN_PASS=SuaSenhaSegura123
-KITCHEN_USER=cozinha
-KITCHEN_PASS=SenhaCozinha456
-RESTAURANT_NAME=Nome do Restaurante
-ALLOWED_ORIGIN=https://seu-frontend.vercel.app
+Abra o arquivo `js/config.js` e cole a URL do seu backend no Render:
+
+```js
+const CONFIG = {
+  API_URL: 'https://SEU-BACKEND.onrender.com',  // ← cole aqui
+  POLL_INTERVAL: 8000,
+};
 ```
 
-5. Após deploy, copie a URL do Render (ex: `https://restauros-api.onrender.com`)
-6. Cole essa URL no frontend como `VITE_API_URL` ou diretamente no `config.js`
+---
 
-## 🔌 Endpoints
+## 🚀 Deploy no Vercel
 
-| Método | Rota | Auth | Descrição |
-|--------|------|------|-----------|
-| GET | /health | ❌ | Health check |
-| POST | /api/auth/login | ❌ | Login |
-| POST | /api/auth/logout | ✅ | Logout |
-| GET | /api/categories | ❌ | Categorias |
-| GET | /api/products | ❌ | Produtos |
-| POST | /api/products | ✅ | Criar produto |
-| PUT | /api/products/:id | ✅ | Editar produto |
-| DELETE | /api/products/:id | ✅ | Remover produto |
-| POST | /api/orders | ❌ | Criar pedido (cliente) |
-| GET | /api/orders | ✅ | Listar pedidos |
-| PUT | /api/orders/:id/status | ✅ | Atualizar status |
-| GET | /api/dashboard | ✅ | Métricas |
-| GET/PUT | /api/settings | ✅ | Configurações |
-
-## 💾 Persistência
-
-Em produção (Render free), o filesystem é efêmero. Os dados ficam em memória durante a sessão do servidor.
-
-Para persistência real: use **Render Disks** (plano pago) ou migre para PostgreSQL.
-
-## 🔧 Dev local
+### 1. Suba no GitHub
 
 ```bash
-node server/server.js
-# ou com reload automático:
-node --watch server/server.js
+git init
+git add .
+git commit -m "feat: RestaurOS frontend"
+git branch -M main
+git remote add origin https://github.com/SEU_USUARIO/restauros-frontend.git
+git push -u origin main
+```
+
+### 2. Importe no Vercel
+
+1. Acesse [vercel.com](https://vercel.com) → **Add New Project**
+2. Importe o repositório `restauros-frontend`
+3. Configure:
+   - **Framework Preset:** Other
+   - **Root Directory:** `/` (raiz)
+   - **Build Command:** deixe **vazio**
+   - **Output Directory:** deixe **vazio**
+4. Clique em **Deploy**
+
+> O `vercel.json` já cuida de todo o roteamento — nenhuma config adicional necessária.
+
+### 3. Copie a URL do Vercel
+
+Após deploy, você recebe algo como `https://restauros-frontend.vercel.app`.
+
+Volte ao painel do **Render** e adicione essa URL na variável `ALLOWED_ORIGIN` do backend:
+
+```
+ALLOWED_ORIGIN=https://restauros-frontend.vercel.app
+```
+
+---
+
+## 📱 URLs do sistema (após deploy)
+
+| Tela | URL |
+|---|---|
+| Cardápio (Mesa 5) | `https://seu-frontend.vercel.app/?mesa=5` |
+| Login | `https://seu-frontend.vercel.app/login` |
+| Painel Admin | `https://seu-frontend.vercel.app/admin` |
+| Tela da Cozinha | `https://seu-frontend.vercel.app/kitchen` |
+
+---
+
+## 🔧 Desenvolvimento local
+
+Abra com qualquer servidor estático. A forma mais simples:
+
+```bash
+# Python (já vem no macOS/Linux)
+python3 -m http.server 8080
+
+# Node.js (instale uma vez)
+npx serve .
+```
+
+Depois edite `js/config.js` e mude `API_URL` para `http://localhost:3000` enquanto o backend roda local.
+
+---
+
+## 📁 Estrutura
+
+```
+restauros-frontend/
+├── css/
+│   ├── admin.css     design system dark SaaS
+│   └── menu.css      cardápio mobile-first
+├── js/
+│   ├── config.js     URL do backend ← EDITE AQUI
+│   ├── api.js        cliente HTTP + auth + retry
+│   ├── ui.js         toast, modal, formatters, chart
+│   ├── app.js        bootstrap + navegação + auth guard
+│   ├── dashboard.js  métricas + gráfico por hora
+│   ├── products.js   CRUD produtos + categorias
+│   ├── orders.js     pedidos + polling + som + impressão
+│   └── settings.js   configurações do restaurante
+├── admin.html        painel administrativo
+├── kitchen.html      KDS — tela da cozinha
+├── login.html        autenticação
+├── index.html        cardápio do cliente
+├── vercel.json       roteamento Vercel
+└── .gitignore
 ```

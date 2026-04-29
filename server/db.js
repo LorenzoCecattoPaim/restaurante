@@ -32,8 +32,8 @@ function buildSeed() {
     orders: [],
     categories: ['Lanches', 'Acompanhamentos', 'Bebidas', 'Sobremesas', 'Combos', 'Entradas'],
     users: [
-      { id:1, username: process.env.ADMIN_USER     || 'admin',   password: process.env.ADMIN_PASS     || 'admin123',   role:'admin',   name:'Administrador' },
-      { id:2, username: process.env.KITCHEN_USER   || 'cozinha', password: process.env.KITCHEN_PASS   || 'cozinha123', role:'kitchen', name:'Cozinha' },
+      { id:1, username: process.env.ADMIN_USER     || 'admin',   password: process.env.ADMIN_PASS     || 'Lore4545!',   role:'admin',   name:'Administrador' },
+      { id:2, username: process.env.KITCHEN_USER   || 'cozinha', password: process.env.KITCHEN_PASS   || 'Lore4545!', role:'kitchen', name:'Cozinha' },
     ],
     settings: {
       restaurantName: process.env.RESTAURANT_NAME || 'RestaurOS',

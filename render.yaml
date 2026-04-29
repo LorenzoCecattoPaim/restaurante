@@ -15,16 +15,16 @@ services:
         value: admin
 
       - key: ADMIN_PASS
-        value: admin123
+        value: Lore4545!
 
       - key: KITCHEN_USER
         value: cozinha
 
       - key: KITCHEN_PASS
-        value: admin123
+        value: Lore4545!
 
       - key: RESTAURANT_NAME
-        value: RestaurOS
+        value: Nome do Restaurante
 
       # ✅ CORRIGIDO AQUI
       - key: ALLOWED_ORIGIN

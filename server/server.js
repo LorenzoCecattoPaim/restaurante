@@ -135,7 +135,7 @@ initDB(() => {
     console.log(`   💚 Health  → http://localhost:${PORT}/health`);
     console.log(`   🔌 API     → http://localhost:${PORT}/api/`);
     console.log(`   🌐 CORS    → ${ALLOWED_ORIGIN}`);
-    console.log(`   🔐 Admin   → admin / ${process.env.ADMIN_PASS || 'admin123'}\n`);
+    console.log(`   🔐 Admin   → admin / ${process.env.ADMIN_PASS || 'Lore4545!'}\n`);
   });
   setInterval(cleanSessions, 60 * 60_000);
 });

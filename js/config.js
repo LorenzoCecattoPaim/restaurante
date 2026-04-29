@@ -4,10 +4,7 @@
 // ============================================================
 
 const CONFIG = {
-  // URL do backend no Render.
-  // Em desenvolvimento: deixe vazio ou use 'http://localhost:3000'
-  // Em produção: cole a URL do Render, ex: 'https://restauros-api.onrender.com'
-  API_URL: 'https://restauros-api.onrender.com',
+  API_URL: 'https://pedemesa.onrender.com',
 
   // Intervalo de polling para pedidos (ms)
   POLL_INTERVAL: 8000,

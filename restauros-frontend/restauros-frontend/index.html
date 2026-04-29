@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#c9472a" />
+  <meta name="description" content="Cardápio digital — faça seu pedido direto da mesa" />
+  <title>Cardápio</title>
+  <link rel="stylesheet" href="/css/menu.css" />
+  <!-- config.js define window.API_BASE_URL antes do api.js -->
+  <script src="/js/config.js"></script>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────── -->
+<header class="menu-header">
+  <div class="menu-logo" id="restaurant-name">🍽️ RestaurOS</div>
+  <button class="cart-btn" id="cart-open-btn">
+    🛒 <span id="cart-label">Pedido</span>
+    <span class="cart-badge" id="cart-count">0</span>
+  </button>
+</header>
+
+<!-- ── Hero ──────────────────────────────────────────────────── -->
+<div class="menu-hero">
+  <h1 id="hero-title">Cardápio</h1>
+  <p>Escolha seus pratos e faça seu pedido direto da mesa</p>
+  <div class="table-chip" id="table-chip">📍 Identificando mesa…</div>
+</div>
+
+<!-- ── Category Tabs ─────────────────────────────────────────── -->
+<div class="cat-tabs-wrap">
+  <div class="cat-tabs" id="cat-tabs"></div>
+</div>
+
+<!-- ── Products ──────────────────────────────────────────────── -->
+<main class="menu-content" id="menu-content">
+  <div class="menu-loading">
+    <div class="menu-spinner"></div>
+    <p>Carregando cardápio…</p>
+  </div>
+</main>
+
+<!-- ── Cart overlay ──────────────────────────────────────────── -->
+<div class="cart-overlay" id="cart-overlay">
+  <div class="cart-drawer" id="cart-drawer">
+    <div class="cart-drawer-handle"></div>
+    <div class="cart-drawer-header">
+      <h2 class="cart-drawer-title">Seu pedido</h2>
+      <button class="cart-drawer-close" id="cart-close-btn">✕</button>
+    </div>
+    <div id="cart-body"></div>
+  </div>
+</div>
+
+<!-- ── Toast container ───────────────────────────────────────── -->
+<div id="menu-toasts"></div>
+
+<script>
+// ────────────────────────────────────────────────────────────
+// Configuração inicial
+// ────────────────────────────────────────────────────────────
+const API_URL = (window.API_BASE_URL || '').replace(/\/$/, '');
+const params  = new URLSearchParams(location.search);
+const TABLE   = params.get('mesa') || params.get('table') || '';
+
+document.getElementById('table-chip').textContent = TABLE
+  ? `📍 Mesa ${TABLE}`
+  : '📍 Mesa não identificada';
+
+// ────────────────────────────────────────────────────────────
+// Toast simples
+// ────────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const c  = document.getElementById('menu-toasts');
+  const el = document.createElement('div');
+  el.className = `menu-toast menu-toast-${type}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => { el.classList.add('fade-out'); setTimeout(() => el.remove(), 400); }, 2800);
+}
+
+// ────────────────────────────────────────────────────────────
+// API fetch helper
+// ────────────────────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const res  = await fetch(`${API_URL}/api${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+  return data;
+}
+
+// ────────────────────────────────────────────────────────────
+// Estado do carrinho
+// ────────────────────────────────────────────────────────────
+let _products = [];
+const cart    = {
+  items: [],
+
+  add(product) {
+    const ex = this.items.find(i => i.productId === product.id);
+    if (ex) ex.quantity++;
+    else this.items.push({
+      productId:   product.id,
+      productName: product.name,
+      unitPrice:   product.price,
+      quantity:    1,
+    });
+    this.updateBadge();
+  },
+
+  remove(productId) {
+    const idx = this.items.findIndex(i => i.productId === productId);
+    if (idx === -1) return;
+    if (this.items[idx].quantity > 1) this.items[idx].quantity--;
+    else this.items.splice(idx, 1);
+    this.updateBadge();
+    renderCartBody();
+  },
+
+  inc(productId) {
+    const item = this.items.find(i => i.productId === productId);
+    if (item) { item.quantity++; this.updateBadge(); renderCartBody(); }
+  },
+
+  total() {
+    return this.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+  },
+
+  count() {
+    return this.items.reduce((s, i) => s + i.quantity, 0);
+  },
+
+  updateBadge() {
+    const n   = this.count();
+    const el  = document.getElementById('cart-count');
+    const lbl = document.getElementById('cart-label');
+    el.textContent  = n;
+    lbl.textContent = n > 0 ? `(${n})` : 'Pedido';
+    el.style.display = n > 0 ? 'grid' : 'none';
+  },
+
+  clear() {
+    this.items = [];
+    this.updateBadge();
+  },
+};
+
+// Formato BRL
+const fmt = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+
+// ────────────────────────────────────────────────────────────
+// Render do carrinho
+// ────────────────────────────────────────────────────────────
+function renderCartBody() {
+  const body = document.getElementById('cart-body');
+
+  if (cart.items.length === 0) {
+    body.innerHTML = `
+      <div class="cart-empty">
+        <div class="cart-empty-icon">🛒</div>
+        <p>Seu carrinho está vazio</p>
+        <p class="cart-empty-sub">Adicione itens do cardápio</p>
+      </div>`;
+    return;
+  }
+
+  const nameVal  = document.getElementById('inp-name')?.value  || '';
+  const notesVal = document.getElementById('inp-notes')?.value || '';
+
+  body.innerHTML = `
+    <div class="cart-fields">
+      <input class="cart-input" id="inp-name" placeholder="Seu nome (opcional)"
+        value="${nameVal}" />
+      <input class="cart-input" id="inp-notes" placeholder="Observações (ex: sem cebola)"
+        value="${notesVal}" />
+    </div>
+
+    <div class="cart-items">
+      ${cart.items.map(i => `
+        <div class="cart-item">
+          <div class="cart-item-info">
+            <div class="cart-item-name">${i.productName}</div>
+            <div class="cart-item-price">${fmt(i.unitPrice)} cada</div>
+          </div>
+          <div class="qty-control">
+            <button class="qty-btn" onclick="cart.remove(${i.productId});renderCartBody()">−</button>
+            <span class="qty-value">${i.quantity}</span>
+            <button class="qty-btn" onclick="cart.inc(${i.productId})">+</button>
+          </div>
+          <div class="cart-item-subtotal">${fmt(i.unitPrice * i.quantity)}</div>
+        </div>`).join('')}
+    </div>
+
+    <div class="cart-summary">
+      <div class="cart-total-row">
+        <span>Total</span>
+        <strong>${fmt(cart.total())}</strong>
+      </div>
+    </div>
+
+    <button class="checkout-btn" id="btn-checkout" onclick="checkout()">
+      Confirmar pedido
+    </button>
+
+    <p class="cart-disclaimer">Seu pedido vai direto para a cozinha 🍳</p>`;
+}
+
+// ────────────────────────────────────────────────────────────
+// Drawer abrir / fechar
+// ────────────────────────────────────────────────────────────
+function openCart() {
+  renderCartBody();
+  document.getElementById('cart-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCart() {
+  document.getElementById('cart-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('cart-open-btn').addEventListener('click', openCart);
+document.getElementById('cart-close-btn').addEventListener('click', closeCart);
+document.getElementById('cart-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('cart-overlay')) closeCart();
+});
+
+// ────────────────────────────────────────────────────────────
+// Finalizar pedido
+// ────────────────────────────────────────────────────────────
+async function checkout() {
+  if (cart.items.length === 0) return;
+
+  const btn   = document.getElementById('btn-checkout');
+  const name  = document.getElementById('inp-name')?.value.trim()  || 'Cliente';
+  const notes = document.getElementById('inp-notes')?.value.trim() || '';
+
+  btn.disabled    = true;
+  btn.textContent = 'Enviando…';
+
+  try {
+    await apiFetch('/orders', {
+      method: 'POST',
+      body: JSON.stringify({
+        tableNumber:  TABLE || '00',
+        customerName: name,
+        notes,
+        items: cart.items.map(i => ({ productId: i.productId, quantity: i.quantity })),
+      }),
+    });
+
+    cart.clear();
+    closeCart();
+    showSuccessScreen();
+
+  } catch (e) {
+    toast(e.message || 'Erro ao enviar pedido. Tente novamente.', 'error');
+    btn.disabled    = false;
+    btn.textContent = 'Confirmar pedido';
+  }
+}
+
+function showSuccessScreen() {
+  const content = document.getElementById('menu-content');
+  const prev    = content.innerHTML;
+
+  content.innerHTML = `
+    <div class="success-screen">
+      <div class="success-icon">✅</div>
+      <h2>Pedido enviado!</h2>
+      <p>Seu pedido foi recebido pela cozinha.<br>Aguarde na mesa ${TABLE || ''}.</p>
+      <button class="success-btn" onclick="this.closest('.success-screen').remove();
+        document.getElementById('menu-content').innerHTML = \`${prev.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`">
+        Fazer outro pedido
+      </button>
+    </div>`;
+  content.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ────────────────────────────────────────────────────────────
+// Carregar cardápio
+// ────────────────────────────────────────────────────────────
+async function loadMenu() {
+  try {
+    const [{ data: products }, { data: categories }, { data: settings }] = await Promise.all([
+      apiFetch('/products'),
+      apiFetch('/categories'),
+      apiFetch('/settings').catch(() => ({ data: { restaurantName: 'RestaurOS' } })),
+    ]);
+
+    // Nome do restaurante
+    const rName = settings.restaurantName || 'RestaurOS';
+    document.getElementById('restaurant-name').textContent = `🍽️ ${rName}`;
+    document.getElementById('hero-title').textContent      = rName;
+    document.title = rName;
+
+    _products = products.filter(p => p.active);
+
+    // Categorias com produtos
+    const usedCats = categories.filter(c => _products.some(p => p.category === c));
+
+    // Category tabs
+    const tabs = document.getElementById('cat-tabs');
+    tabs.innerHTML = usedCats.map((c, i) =>
+      `<button class="cat-tab${i === 0 ? ' active' : ''}" onclick="scrollToCategory('${c}',this)">${c}</button>`
+    ).join('');
+
+    // Menu content
+    const content = document.getElementById('menu-content');
+    if (!_products.length) {
+      content.innerHTML = `<div class="empty-menu"><p>Cardápio em atualização. Volte em breve! 🍽️</p></div>`;
+      return;
+    }
+
+    content.innerHTML = usedCats.map(cat => {
+      const catProducts = _products.filter(p => p.category === cat);
+      if (!catProducts.length) return '';
+      return `
+        <section class="category-section" data-cat="${cat}" id="cat-${cat.replace(/\s+/g,'-')}">
+          <h2 class="category-title">${cat}</h2>
+          <div class="products-list">
+            ${catProducts.map(p => `
+              <article class="product-card" onclick="handleAdd(${p.id})">
+                <div class="product-card-img-wrap">
+                  ${p.image
+                    ? `<img class="product-card-img" src="${p.image}" alt="${p.name}" loading="lazy"
+                        onerror="this.closest('.product-card-img-wrap').innerHTML='<div class=product-card-img-placeholder>🍔</div>'">`
+                    : `<div class="product-card-img-placeholder">🍔</div>`}
+                </div>
+                <div class="product-card-info">
+                  <h3 class="product-card-name">${p.name}</h3>
+                  ${p.description ? `<p class="product-card-desc">${p.description}</p>` : ''}
+                  <div class="product-card-footer">
+                    <span class="product-card-price">${fmt(p.price)}</span>
+                    <button class="add-btn" onclick="event.stopPropagation();handleAdd(${p.id})">
+                      + Adicionar
+                    </button>
+                  </div>
+                </div>
+              </article>`).join('')}
+          </div>
+        </section>`;
+    }).join('');
+
+  } catch (e) {
+    document.getElementById('menu-content').innerHTML = `
+      <div class="empty-menu">
+        <p>Não foi possível carregar o cardápio.<br>Verifique sua conexão e recarregue a página.</p>
+        <button onclick="location.reload()" style="margin-top:16px;padding:10px 20px;background:#c9472a;color:#fff;border:none;border-radius:8px;cursor:pointer">
+          Tentar novamente
+        </button>
+      </div>`;
+  }
+}
+
+function handleAdd(productId) {
+  const p = _products.find(p => p.id === productId);
+  if (!p) return;
+  cart.add(p);
+  toast(`${p.name} adicionado! 🛒`, 'success');
+}
+
+function scrollToCategory(cat, btn) {
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const id  = `cat-${cat.replace(/\s+/g,'-')}`;
+  const sec = document.getElementById(id);
+  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Observa seções visíveis para atualizar tab ativa
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const cat = e.target.dataset.cat;
+      document.querySelectorAll('.cat-tab').forEach(t => {
+        t.classList.toggle('active', t.textContent === cat);
+      });
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+
+// Observe depois de renderizar
+const origLoad = loadMenu;
+loadMenu = async function() {
+  await origLoad();
+  document.querySelectorAll('.category-section').forEach(s => io.observe(s));
+};
+
+loadMenu();
+</script>
+</body>
+</html>

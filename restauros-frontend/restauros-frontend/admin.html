@@ -10,7 +10,7 @@
 
 <div class="app-layout">
 
-  <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+  <!-- ══ SIDEBAR ══ -->
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">🍽️</div>
@@ -54,17 +54,18 @@
     </div>
   </aside>
 
-  <!-- ══ HEADER ════════════════════════════════════════════════ -->
+  <!-- ══ HEADER ══ -->
   <header class="app-header">
     <h1 class="header-title" id="header-title">Dashboard</h1>
     <div class="header-actions">
-      <span id="polling-indicator" style="font-size:.72rem;color:var(--success);opacity:0;transition:opacity .3s;display:flex;align-items:center;gap:4px"></span>
+      <span id="polling-indicator"
+        style="font-size:.72rem;color:var(--success);opacity:0;transition:opacity .3s;display:flex;align-items:center;gap:5px"></span>
       <a href="/kitchen" class="btn btn-ghost btn-sm" target="_blank">👨‍🍳 Cozinha</a>
-      <a href="/?mesa=1" class="btn btn-ghost btn-sm" target="_blank">📱 Cardápio</a>
+      <a href="/?mesa=1"  class="btn btn-ghost btn-sm" target="_blank">📱 Cardápio</a>
     </div>
   </header>
 
-  <!-- ══ MAIN ══════════════════════════════════════════════════ -->
+  <!-- ══ MAIN ══ -->
   <main class="app-main">
 
     <!-- ── DASHBOARD ── -->
@@ -72,12 +73,11 @@
       <div class="section-header">
         <div>
           <h2 class="section-title">Dashboard</h2>
-          <p class="section-subtitle" id="dash-date">Hoje</p>
+          <p class="section-subtitle" id="dash-date"></p>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="Dashboard.load()">↻ Atualizar</button>
       </div>
 
-      <!-- Stats -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon blue">📦</div>
@@ -101,25 +101,24 @@
         </div>
       </div>
 
-      <!-- Gráfico + Top itens -->
       <div class="two-col" style="margin-bottom:20px">
         <div class="card">
           <div class="card-title">📈 Receita por hora (hoje)</div>
-          <div id="revenue-chart" style="min-height:100px"></div>
+          <div id="revenue-chart" style="min-height:90px;margin-top:8px"></div>
         </div>
         <div class="card">
           <div class="card-title">📊 Status dos pedidos</div>
           <div class="status-grid">
             <div class="status-mini">
-              <div class="status-mini-value" style="color:var(--info)"    id="status-recebido">—</div>
+              <div class="status-mini-value" style="color:var(--info)"     id="status-recebido">—</div>
               <div class="status-mini-label">Recebidos</div>
             </div>
             <div class="status-mini">
-              <div class="status-mini-value" style="color:var(--warning)" id="status-em_preparo">—</div>
+              <div class="status-mini-value" style="color:var(--warning)"  id="status-em_preparo">—</div>
               <div class="status-mini-label">Em preparo</div>
             </div>
             <div class="status-mini">
-              <div class="status-mini-value" style="color:var(--success)" id="status-pronto">—</div>
+              <div class="status-mini-value" style="color:var(--success)"  id="status-pronto">—</div>
               <div class="status-mini-label">Prontos</div>
             </div>
             <div class="status-mini">
@@ -134,11 +133,12 @@
         </div>
       </div>
 
-      <!-- Top itens -->
       <div class="card">
         <div class="card-title">🏆 Mais vendidos hoje</div>
         <div class="top-items" id="top-items-list">
-          <div class="empty-state" style="padding:24px"><div class="empty-state-desc">Carregando…</div></div>
+          <div class="empty-state" style="padding:24px">
+            <div class="empty-state-desc">Carregando…</div>
+          </div>
         </div>
       </div>
     </section>
@@ -150,7 +150,10 @@
           <h2 class="section-title">Pedidos</h2>
           <p class="section-subtitle">Atualiza automaticamente a cada 8s</p>
         </div>
-        <button class="btn btn-ghost btn-sm" id="btn-refresh-orders">↻ Atualizar</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" id="btn-toggle-sound" title="Alternar som">🔔</button>
+          <button class="btn btn-ghost btn-sm" id="btn-refresh-orders">↻ Atualizar</button>
+        </div>
       </div>
 
       <div style="margin-bottom:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -161,6 +164,10 @@
           <button class="filter-tab orders-filter-tab" data-status="pronto">Prontos</button>
           <button class="filter-tab orders-filter-tab" data-status="entregue">Entregues</button>
           <button class="filter-tab orders-filter-tab" data-status="cancelado">Cancelados</button>
+        </div>
+        <div class="search-box" style="max-width:200px">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="orders-search" placeholder="Mesa, cliente…" />
         </div>
       </div>
 
@@ -181,13 +188,11 @@
         <button class="btn btn-primary" id="btn-new-product">+ Novo produto</button>
       </div>
 
-      <!-- Categorias -->
       <div class="card" style="margin-bottom:18px">
         <div class="card-title">🏷️ Categorias</div>
         <div id="cat-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
         <div style="display:flex;gap:8px">
-          <input id="new-cat-input" class="form-control" style="max-width:220px"
-            placeholder="Nova categoria…" type="text" />
+          <input id="new-cat-input" class="form-control" style="max-width:220px" placeholder="Nova categoria…" />
           <button class="btn btn-ghost btn-sm" id="btn-add-cat">+ Adicionar</button>
         </div>
       </div>
@@ -196,9 +201,9 @@
         <div class="table-toolbar">
           <div class="search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="products-search" placeholder="Buscar…" />
+            <input type="text" id="products-search" placeholder="Buscar produto…" />
           </div>
-          <div style="display:flex;gap:8px;align-items:center">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <select class="form-control" id="products-cat-filter" style="width:auto;font-size:.8rem">
               <option value="all">Todas as categorias</option>
             </select>
@@ -245,21 +250,21 @@
           <div class="card-title">🏪 Dados do restaurante</div>
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Nome do restaurante</label>
+              <label class="form-label">Nome</label>
               <input id="set-name" class="form-control" type="text" placeholder="Ex: Burguer House" />
             </div>
             <div class="form-group">
               <label class="form-label">Endereço</label>
-              <input id="set-address" class="form-control" type="text" placeholder="Rua, número, bairro" />
+              <input id="set-address" class="form-control" type="text" />
             </div>
             <div class="form-group">
-              <label class="form-label">Telefone / WhatsApp</label>
+              <label class="form-label">Telefone</label>
               <input id="set-phone" class="form-control" type="text" placeholder="(00) 00000-0000" />
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Abre às</label>
-                <input id="set-open" class="form-control" type="time" />
+                <input id="set-open"  class="form-control" type="time" />
               </div>
               <div class="form-group">
                 <label class="form-label">Fecha às</label>
@@ -272,14 +277,16 @@
 
         <div class="card">
           <div class="card-title">🔗 Links do sistema</div>
-          <div class="form-grid">
+          <div class="form-grid" style="gap:14px">
             <div class="form-group">
-              <label class="form-label">Cardápio (cliente)</label>
+              <label class="form-label">Cardápio do cliente</label>
               <div style="display:flex;gap:8px">
-                <input class="form-control" type="text" value="/?mesa=1" readonly style="opacity:.6" />
+                <input class="form-control" id="menu-url" type="text" value="/?mesa=1" readonly style="opacity:.6" />
                 <a href="/?mesa=1" target="_blank" class="btn btn-ghost btn-sm">Abrir</a>
               </div>
-              <span style="font-size:.72rem;color:var(--text-muted)">Troque o número da mesa na URL. Use QR Code para cada mesa.</span>
+              <span style="font-size:.72rem;color:var(--text-muted)">
+                Troque o número da mesa. Use QR Code por mesa.
+              </span>
             </div>
             <div class="form-group">
               <label class="form-label">Tela da cozinha (KDS)</label>
@@ -288,34 +295,28 @@
                 <a href="/kitchen" target="_blank" class="btn btn-ghost btn-sm">Abrir</a>
               </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Painel admin</label>
-              <div style="display:flex;gap:8px">
-                <input class="form-control" type="text" value="/admin" readonly style="opacity:.6" />
-              </div>
-            </div>
           </div>
 
           <div style="margin-top:20px">
-            <div class="card-title">👥 Usuários (MVP)</div>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <div class="card-title">👥 Usuários</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
               <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-raised);border-radius:6px">
                 <div>
-                  <div style="font-size:.85rem;font-weight:600">admin</div>
+                  <div style="font-size:.85rem;font-weight:600" id="display-admin-user">admin</div>
                   <div style="font-size:.72rem;color:var(--text-muted)">Gerente · Acesso total</div>
                 </div>
                 <span class="badge badge-active">● Ativo</span>
               </div>
               <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-raised);border-radius:6px">
                 <div>
-                  <div style="font-size:.85rem;font-weight:600">cozinha</div>
-                  <div style="font-size:.72rem;color:var(--text-muted)">Cozinheiro · Apenas KDS</div>
+                  <div style="font-size:.85rem;font-weight:600" id="display-kitchen-user">cozinha</div>
+                  <div style="font-size:.72rem;color:var(--text-muted)">Cozinheiro · KDS</div>
                 </div>
                 <span class="badge badge-active">● Ativo</span>
               </div>
             </div>
             <p style="font-size:.72rem;color:var(--text-muted);margin-top:8px">
-              Gestão de usuários completa disponível na próxima versão.
+              Para alterar credenciais, use variáveis de ambiente no servidor.
             </p>
           </div>
         </div>
@@ -323,9 +324,9 @@
     </section>
 
   </main>
-</div><!-- /app-layout -->
+</div>
 
-<!-- ══ MODAL — PRODUTO ════════════════════════════════════════ -->
+<!-- ══ MODAL PRODUTO ══ -->
 <div class="modal-overlay" id="product-modal">
   <div class="modal">
     <div class="modal-header">
@@ -359,7 +360,7 @@
             <label class="form-label">URL da imagem</label>
             <input id="field-image" class="form-control" type="url" placeholder="https://…" />
             <img id="img-preview" src="" alt=""
-              style="margin-top:8px;display:none;width:100%;height:100px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"
+              style="margin-top:8px;display:none;width:100%;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"
               onload="this.style.display='block'" onerror="this.style.display='none'" />
           </div>
           <div class="form-group">
@@ -382,7 +383,7 @@
   </div>
 </div>
 
-<!-- Scripts -->
+<script src="/js/config.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/ui.js"></script>
 <script src="/js/products.js"></script>
@@ -390,11 +391,10 @@
 <script src="/js/dashboard.js"></script>
 <script src="/js/settings.js"></script>
 <script src="/js/app.js"></script>
-
 <script>
-  // Data de hoje no subtitle
   document.getElementById('dash-date').textContent =
     new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' });
+  startElapsedTimers();
 </script>
 </body>
 </html>

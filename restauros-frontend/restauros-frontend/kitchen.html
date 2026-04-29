@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>RestaurOS — Cozinha</title>
+  <script src="/js/config.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0a0b0d;--surface:#111214;--raised:#18191e;--border:#252630;--accent:#4f6ef7;--success:#22c55e;--warning:#f59e0b;--danger:#ef4444;--info:#38bdf8;--text:#ecedf2;--muted:#5a5b68}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+    .kds-header{background:var(--surface);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:30;flex-shrink:0}
+    .kds-logo{display:flex;align-items:center;gap:8px;font-size:.9rem;font-weight:700}
+    .kds-logo-icon{width:30px;height:30px;background:var(--warning);border-radius:8px;display:grid;place-items:center;font-size:16px}
+    .kds-meta{display:flex;align-items:center;gap:12px;font-size:.78rem;color:var(--muted)}
+    .kds-live{display:flex;align-items:center;gap:5px;color:var(--success);font-weight:600;font-size:.75rem}
+    .kds-live::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--success);animation:blink 1.4s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    .kds-clock{font-family:'DM Mono',monospace;font-size:.82rem}
+    .kbtn{background:var(--raised);border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:5px 10px;font-size:.75rem;cursor:pointer;font-family:inherit;transition:all .12s}
+    .kbtn:hover{color:var(--text)}
+    .kds-board{flex:1;padding:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;align-content:start;overflow-y:auto}
+    .ticket{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s;animation:tin .25s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes tin{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .ticket:hover{transform:translateY(-2px)}
+    .ticket[data-status=recebido]{border-top:3px solid var(--info)}
+    .ticket[data-status=em_preparo]{border-top:3px solid var(--warning)}
+    .ticket[data-status=pronto]{border-top:3px solid var(--success);opacity:.75}
+    .ticket-header{background:var(--raised);padding:11px 14px;display:flex;align-items:center;justify-content:space-between}
+    .ticket-id{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)}
+    .ticket-table{font-size:1.05rem;font-weight:800}
+    .ts{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:99px}
+    .ts.recebido{background:rgba(56,189,248,.15);color:var(--info)}
+    .ts.em_preparo{background:rgba(245,158,11,.15);color:var(--warning)}
+    .ts.pronto{background:rgba(34,197,94,.15);color:var(--success)}
+    .ticket-body{padding:12px 14px;flex:1}
+    .ticket-customer{font-size:.75rem;color:var(--muted);margin-bottom:8px}
+    .ticket-note{font-size:.75rem;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:5px 9px;color:var(--warning);margin-bottom:8px}
+    .ticket-items{display:flex;flex-direction:column;gap:5px}
+    .ticket-item{display:flex;align-items:baseline;gap:8px;font-size:.85rem;padding-bottom:5px;border-bottom:1px solid var(--border)}
+    .ticket-item:last-child{border-bottom:none}
+    .ticket-qty{font-family:'DM Mono',monospace;font-size:.78rem;font-weight:700;color:var(--warning);min-width:22px}
+    .ticket-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .ticket-timer{font-family:'DM Mono',monospace;font-size:.78rem}
+    .ticket-timer.ok{color:var(--muted)}
+    .ticket-timer.warn{color:var(--warning)}
+    .ticket-timer.urgent{color:var(--danger);font-weight:700;animation:pt 1s infinite}
+    @keyframes pt{0%,100%{opacity:1}50%{opacity:.6}}
+    .ba{border:none;border-radius:8px;padding:8px 14px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap}
+    .ba.start{background:var(--accent);color:#fff}
+    .ba.start:hover{opacity:.9}
+    .ba.done{background:rgba(34,197,94,.15);color:var(--success);border:1px solid rgba(34,197,94,.25)}
+    .ba.done:hover{background:rgba(34,197,94,.25)}
+    .ba.finish{background:var(--raised);color:var(--muted);border:1px solid var(--border);cursor:default}
+    .kds-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:var(--muted);text-align:center;gap:10px}
+    .kds-empty-icon{font-size:3rem}
+    .kds-empty-title{font-size:.95rem;font-weight:600;color:#7a7b8a}
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+  </style>
+</head>
+<body>
+<header class="kds-header">
+  <div class="kds-logo">
+    <div class="kds-logo-icon">👨‍🍳</div>
+    RestaurOS · Cozinha
+  </div>
+  <div class="kds-meta">
+    <div class="kds-live">Ao vivo</div>
+    <div class="kds-clock" id="clock">--:--</div>
+    <button class="kbtn" id="sound-btn">🔔</button>
+    <button class="kbtn" onclick="doLogout()">Sair</button>
+  </div>
+</header>
+<div class="kds-board" id="board">
+  <div class="kds-empty"><div class="kds-empty-icon">🍽️</div><div class="kds-empty-title">Carregando…</div></div>
+</div>
+<script>
+const API_URL = (window.API_BASE_URL||'').replace(/\/$/,'');
+const token   = localStorage.getItem('rs_token');
+if (!token) window.location.href='/login.html';
+const H = {'Content-Type':'application/json','Authorization':`Bearer ${token}`};
+
+async function doLogout(){
+  await fetch(`${API_URL}/api/auth/logout`,{method:'POST',headers:H}).catch(()=>{});
+  localStorage.removeItem('rs_token'); localStorage.removeItem('rs_user');
+  window.location.href='/login.html';
+}
+
+let _orders=[],_known=new Set(),_ctx=null,_sound=localStorage.getItem('rs_sound')!=='false';
+updateSoundBtn();
+
+const SHOW=['recebido','em_preparo','pronto'];
+const FLOW={recebido:{next:'em_preparo',label:'▶ Iniciar preparo',cls:'start'},em_preparo:{next:'pronto',label:'✓ Pronto',cls:'done'},pronto:{next:null,label:'✓ Aguardando…',cls:'finish'}};
+const STATUS_LABEL={recebido:'Recebido',em_preparo:'Em preparo',pronto:'Pronto'};
+
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});},1000);
+document.getElementById('clock').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+function em(iso){return Math.floor((Date.now()-new Date(iso))/60000);}
+function tcls(m){return m>=15?'urgent':m>=8?'warn':'ok';}
+function tlbl(m){return m<1?'Agora':m<60?`${m}min`:`${Math.floor(m/60)}h${m%60}m`;}
+
+function render(){
+  const board=document.getElementById('board');
+  const vis=_orders.filter(o=>SHOW.includes(o.status)).sort((a,b)=>{
+    const ord={recebido:0,em_preparo:1,pronto:2};
+    return ord[a.status]-ord[b.status]||new Date(a.createdAt)-new Date(b.createdAt);
+  });
+  if(!vis.length){board.innerHTML='<div class="kds-empty"><div class="kds-empty-icon">✅</div><div class="kds-empty-title">Tudo em dia! Nenhum pedido pendente.</div></div>';return;}
+  board.innerHTML=vis.map(o=>{
+    const f=FLOW[o.status]||{}, m=em(o.createdAt);
+    return `<div class="ticket" data-id="${o.id}" data-status="${o.status}">
+      <div class="ticket-header">
+        <div><div class="ticket-id">#${String(o.id).padStart(4,'0')}</div><div class="ticket-table">Mesa ${o.tableNumber}</div></div>
+        <span class="ts ${o.status}">${STATUS_LABEL[o.status]||o.status}</span>
+      </div>
+      <div class="ticket-body">
+        <div class="ticket-customer">👤 ${o.customerName}</div>
+        ${o.notes?`<div class="ticket-note">⚠️ ${o.notes}</div>`:''}
+        <div class="ticket-items">${o.items.map(i=>`<div class="ticket-item"><span class="ticket-qty">${i.quantity}×</span><span>${i.productName}</span></div>`).join('')}</div>
+      </div>
+      <div class="ticket-footer">
+        <span class="ticket-timer ${tcls(m)}" data-created="${o.createdAt}">🕐 ${tlbl(m)}</span>
+        ${f.next?`<button class="ba ${f.cls}" onclick="advance(${o.id})">${f.label}</button>`:`<button class="ba finish" disabled>${f.label}</button>`}
+      </div></div>`;
+  }).join('');
+}
+
+async function advance(id){
+  const o=_orders.find(o=>o.id===id); if(!o||!FLOW[o.status]?.next) return;
+  const next=FLOW[o.status].next, idx=_orders.findIndex(o=>o.id===id), bak={..._orders[idx]};
+  _orders[idx].status=next; render();
+  try{
+    await fetch(`${API_URL}/api/orders/${id}/status`,{method:'PUT',headers:H,body:JSON.stringify({status:next})});
+    if(next==='pronto') playDone();
+  }catch{_orders[idx]=bak;render();alert('Erro. Tente novamente.');}
+}
+
+async function fetchOrders(){
+  try{
+    const res=await fetch(`${API_URL}/api/orders`,{headers:H});
+    if(res.status===401){window.location.href='/login.html';return;}
+    const data=await res.json(), list=data.data||[];
+    const newOnes=list.filter(o=>o.status==='recebido'&&!_known.has(o.id));
+    if(newOnes.length&&_known.size>0){playNewOrder();document.title=`🔔 ${newOnes.length} novo(s)`;setTimeout(()=>{document.title='RestaurOS — Cozinha';},3000);}
+    list.forEach(o=>_known.add(o.id));
+    _orders=list; render();
+  }catch{}
+}
+
+function refreshTimers(){
+  document.querySelectorAll('[data-created]').forEach(el=>{
+    const m=em(el.dataset.created);
+    el.className=`ticket-timer ${tcls(m)}`;
+    el.textContent=`🕐 ${tlbl(m)}`;
+  });
+}
+
+function getCtx(){if(!_ctx) _ctx=new(window.AudioContext||window.webkitAudioContext)();return _ctx;}
+function tone(f,d,dur=.25){try{const ctx=getCtx(),o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=f;o.type='sine';g.gain.setValueAtTime(.25,ctx.currentTime+d);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+d+dur);o.start(ctx.currentTime+d);o.stop(ctx.currentTime+d+dur);}catch{}}
+function playNewOrder(){if(!_sound)return;[[440,0],[550,.18],[660,.36]].forEach(([f,d])=>tone(f,d));}
+function playDone(){if(!_sound)return;tone(880,0,.4);}
+function toggleSound(){_sound=!_sound;localStorage.setItem('rs_sound',_sound);updateSoundBtn();}
+function updateSoundBtn(){const b=document.getElementById('sound-btn');if(b)b.textContent=_sound?'🔔':'🔕';}
+document.getElementById('sound-btn')?.addEventListener('click',toggleSound);
+document.addEventListener('click',()=>{try{getCtx();}catch{}},{once:true});
+
+fetchOrders();
+setInterval(fetchOrders,8000);
+setInterval(refreshTimers,30000);
+</script>
+</body>
+</html>

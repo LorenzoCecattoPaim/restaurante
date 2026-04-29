@@ -8,14 +8,26 @@ const App = (() => {
   // ─── Auth guard ────────────────────────────────────────────
   async function checkAuth() {
     const token = localStorage.getItem('rs_token');
-    if (!token) { window.location.href = '/login'; return false; }
+    if (!token) { redirect('/login'); return false; }
     try {
       await API.auth.me();
       return true;
     } catch {
       localStorage.removeItem('rs_token');
-      window.location.href = '/login';
+      localStorage.removeItem('rs_user');
+      redirect('/login');
       return false;
+    }
+  }
+
+  // Redireciona corretamente: /login → /login.html em file://,
+  // /login em Vercel (vercel.json cuida do roteamento)
+  function redirect(path) {
+    // Se estiver rodando como arquivo local, usa .html
+    if (location.protocol === 'file:' || location.port === '8080' || location.port === '5500') {
+      window.location.href = path + '.html';
+    } else {
+      window.location.href = path;
     }
   }
 
@@ -24,7 +36,7 @@ const App = (() => {
     try { await API.auth.logout(); } catch {}
     localStorage.removeItem('rs_token');
     localStorage.removeItem('rs_user');
-    window.location.href = '/login';
+    redirect('/login');
   }
 
   // ─── Navegação ─────────────────────────────────────────────
@@ -57,7 +69,6 @@ const App = (() => {
     const ok = await checkAuth();
     if (!ok) return;
 
-    // Mostra nome do usuário
     const user = JSON.parse(localStorage.getItem('rs_user') || '{}');
     const nameEl = qs('#user-name');
     const roleEl = qs('#user-role');
@@ -66,15 +77,12 @@ const App = (() => {
     const avatar = qs('#user-avatar');
     if (avatar) avatar.textContent = (user.name || 'A')[0].toUpperCase();
 
-    // Bind nav
     qsa('.nav-item[data-nav]').forEach(item => {
       item.addEventListener('click', () => navigate(item.dataset.nav));
     });
 
-    // Logout
     qs('#btn-logout')?.addEventListener('click', logout);
 
-    // Inicia módulos
     await Promise.all([
       Dashboard.init(),
       Products.init(),
@@ -84,7 +92,6 @@ const App = (() => {
 
     navigate('dashboard');
 
-    // Atualiza dashboard periodicamente
     setInterval(() => { if (_current === 'dashboard') Dashboard.load(); }, 30000);
   }
 

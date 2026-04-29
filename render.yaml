@@ -15,13 +15,13 @@ services:
         value: admin
 
       - key: ADMIN_PASS
-        generateValue: true
+        value: admin123
 
       - key: KITCHEN_USER
         value: cozinha
 
       - key: KITCHEN_PASS
-        generateValue: true
+        value: admin123
 
       - key: RESTAURANT_NAME
         value: RestaurOS

@@ -6,20 +6,26 @@ services:
     buildCommand: echo "No build needed"
     startCommand: node server/server.js
     healthCheckPath: /health
+
     envVars:
       - key: NODE_ENV
         value: production
+
       - key: ADMIN_USER
         value: admin
+
       - key: ADMIN_PASS
         generateValue: true
+
       - key: KITCHEN_USER
         value: cozinha
+
       - key: KITCHEN_PASS
         generateValue: true
+
       - key: RESTAURANT_NAME
         value: RestaurOS
-      # IMPORTANTE: após deploy, cole aqui a URL do Vercel
-      # Ex: https://restauros.vercel.app,https://restauros-git-main-usuario.vercel.app
+
+      # ✅ CORRIGIDO AQUI
       - key: ALLOWED_ORIGIN
-        value: "*"
+        value: https://restaurante-delta-ashy.vercel.app

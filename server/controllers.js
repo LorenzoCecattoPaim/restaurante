@@ -147,6 +147,11 @@ const OrdersController = {
     if (!VALID_STATUSES.includes(body.status))
       return json(res, 400, { error: `Status inválido. Use: ${VALID_STATUSES.join(', ')}` });
 
+    // Pedido já pago não pode ser cancelado (o valor já entrou no caixa).
+    // Para corrigir, o gerente estorna o pagamento primeiro.
+    if (body.status === 'cancelado' && db.orders[idx].paymentId)
+      return json(res, 409, { error: 'Pedido já pago. Estorne o pagamento antes de cancelar.' });
+
     db.orders[idx] = { ...db.orders[idx], status: body.status, updatedAt: new Date().toISOString() };
     markDirty();
     json(res, 200, { data: db.orders[idx] });

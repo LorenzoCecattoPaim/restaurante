@@ -53,6 +53,20 @@
   </div>
 </div>
 
+<!-- ── Chamar garçom ────────────────────────────────────────── -->
+<button class="call-fab" id="call-fab" hidden aria-haspopup="dialog">🙋 <span id="call-fab-label">Chamar garçom</span></button>
+
+<div class="cart-overlay" id="call-overlay">
+  <div class="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="call-title">
+    <div class="cart-drawer-handle"></div>
+    <div class="cart-drawer-header">
+      <h2 class="cart-drawer-title" id="call-title">Atendimento</h2>
+      <button class="cart-drawer-close" id="call-close-btn" aria-label="Fechar">✕</button>
+    </div>
+    <div id="call-body"></div>
+  </div>
+</div>
+
 <!-- ── Toast container ───────────────────────────────────────── -->
 <div id="menu-toasts"></div>
 
@@ -272,7 +286,7 @@ function showSuccessScreen() {
     <div class="success-screen">
       <div class="success-icon">✅</div>
       <h2>Pedido enviado!</h2>
-      <p>Seu pedido foi recebido pela cozinha.<br>Aguarde na mesa ${TABLE || ''}.</p>
+      <p>Seu pedido foi recebido pela cozinha.<br>Aguarde na mesa ${TABLE.replace(/[^A-Za-z0-9-]/g, '')}.</p>
       <button class="success-btn" onclick="this.closest('.success-screen').remove();
         document.getElementById('menu-content').innerHTML = \`${prev.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`">
         Fazer outro pedido
@@ -383,6 +397,149 @@ const io = new IntersectionObserver(entries => {
     }
   });
 }, { rootMargin: '-30% 0px -60% 0px' });
+
+// ────────────────────────────────────────────────────────────
+// Chamar garçom / pedir a conta
+// Usa a mesma identificação da mesa do QR Code (?mesa=N).
+// O servidor devolve um token por chamado; só quem tem o token
+// acompanha ou cancela aquele chamado.
+// ────────────────────────────────────────────────────────────
+const CallWidget = (() => {
+  const KEY     = `rs_calls_${TABLE}`;
+  const POLL_MS = 8000;
+  const OPTIONS = {
+    garcom: { icon: '🙋', title: 'Chamar garçom', sub: 'Alguém da equipe vem até a sua mesa' },
+    conta:  { icon: '🧾', title: 'Pedir a conta', sub: 'Avisamos o garçom para trazer a conta' },
+  };
+  let calls = [];       // [{id, token, type, status, createdAt, acceptedAt}]
+  let timer = null;
+  let sending = false;
+
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } };
+  const save = () => localStorage.setItem(KEY, JSON.stringify(calls.map(({ id, token, type }) => ({ id, token, type }))));
+  const active = () => calls.filter(c => ['pending', 'accepted'].includes(c.status));
+
+  function init() {
+    if (!TABLE) return;                      // sem mesa identificada, não há como chamar
+    const fab = document.getElementById('call-fab');
+    fab.hidden = false;
+    document.body.classList.add('has-call-fab');
+    fab.addEventListener('click', open);
+    document.getElementById('call-close-btn').addEventListener('click', close);
+    document.getElementById('call-overlay').addEventListener('click', e => {
+      if (e.target.id === 'call-overlay') close();
+    });
+    calls = load().map(c => ({ ...c, status: 'pending' }));
+    if (calls.length) refresh();
+  }
+
+  function open() {
+    render();
+    document.getElementById('call-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function close() {
+    document.getElementById('call-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function render() {
+    const body = document.getElementById('call-body');
+    const act  = active();
+    const status = act.map(c => {
+      const o = OPTIONS[c.type] || OPTIONS.garcom;
+      const accepted = c.status === 'accepted';
+      return `
+        <div class="call-status${accepted ? ' is-accepted' : ''}" role="status">
+          <div class="call-status-title">${o.icon} ${accepted ? 'Um garçom está a caminho' : 'Chamado enviado'}</div>
+          <div class="call-status-sub">${o.title} · ${accepted ? 'já estamos indo até a mesa' : 'aguardando a equipe'}</div>
+          ${accepted ? '' : `<button class="call-cancel" onclick="CallWidget.cancel(${c.id})">Cancelar chamado</button>`}
+        </div>`;
+    }).join('');
+
+    body.innerHTML = `
+      ${status}
+      <div class="call-options">
+        ${Object.entries(OPTIONS).map(([type, o]) => {
+          const done = act.some(c => c.type === type);
+          return `
+            <button class="call-option" ${done || sending ? 'disabled' : ''} onclick="CallWidget.send('${type}')">
+              <span class="call-option-icon">${o.icon}</span>
+              <span><div class="call-option-title">${o.title}</div>
+              <div class="call-option-sub">${done ? 'Já solicitado' : o.sub}</div></span>
+            </button>`;
+        }).join('')}
+      </div>
+      <p class="call-hint">Mesa ${TABLE.replace(/[^A-Za-z0-9-]/g, '')}</p>`;
+
+    const fabLabel = document.getElementById('call-fab-label');
+    const fab = document.getElementById('call-fab');
+    const any = act.length > 0;
+    fab.classList.toggle('is-active', any);
+    fabLabel.textContent = !any ? 'Chamar garçom'
+      : act.some(c => c.status === 'accepted') ? 'Garçom a caminho' : 'Garçom chamado';
+  }
+
+  async function send(type) {
+    if (sending) return;
+    sending = true; render();
+    try {
+      const { data } = await apiFetch('/calls', {
+        method: 'POST',
+        body: JSON.stringify({ tableNumber: TABLE, type }),
+      });
+      calls = calls.filter(c => c.id !== data.id);
+      calls.push({ id: data.id, token: data.token, type: data.type, status: data.status, createdAt: data.createdAt });
+      save();
+      toast(type === 'conta' ? 'Pedido de conta enviado 🧾' : 'Garçom chamado 🙋', 'success');
+      schedule();
+    } catch (e) {
+      toast(e.message || 'Não foi possível chamar agora. Tente de novo.', 'error');
+    } finally {
+      sending = false; render();
+    }
+  }
+
+  async function cancel(id) {
+    const c = calls.find(c => c.id === id);
+    if (!c) return;
+    try {
+      await apiFetch(`/calls/${id}/client-cancel`, { method: 'POST', body: JSON.stringify({ token: c.token }) });
+      c.status = 'cancelled';
+      toast('Chamado cancelado');
+    } catch (e) {
+      toast(e.message, 'error');
+      await refresh();
+      return;
+    }
+    cleanup(); render();
+  }
+
+  async function refresh() {
+    await Promise.all(calls.map(async c => {
+      try {
+        const { data } = await apiFetch(`/calls/${c.id}/public?token=${encodeURIComponent(c.token)}`);
+        if (c.status === 'pending' && data.status === 'accepted') toast('Um garçom está a caminho 👋', 'success');
+        Object.assign(c, data);
+      } catch { c.status = 'gone'; }   // chamado inexistente (ex.: servidor reiniciado)
+    }));
+    cleanup(); render(); schedule();
+  }
+
+  function cleanup() {
+    calls = calls.filter(c => ['pending', 'accepted'].includes(c.status));
+    save();
+  }
+
+  function schedule() {
+    clearTimeout(timer);
+    if (active().length) timer = setTimeout(refresh, POLL_MS);
+  }
+
+  return { init, send, cancel };
+})();
+
+CallWidget.init();
 
 // Observe depois de renderizar
 const origLoad = loadMenu;

@@ -106,3 +106,38 @@ restauros-frontend/
 ├── vercel.json       roteamento Vercel
 └── .gitignore
 ```
+
+---
+
+## 🧩 Operação integrada (chamados, contas, financeiro, análises)
+
+### Novas telas no admin
+| Tela | Quem acessa | O que faz |
+|---|---|---|
+| Chamados | Gerente, Garçom | Fila de "Chamar garçom" / "Pedir a conta" → Assumir → Concluir. Destaque após o limite configurado |
+| Contas | Gerente, Garçom | Consumo aberto por mesa (vindo dos pedidos) → Pagar conta (PIX, Crédito, Débito, Dinheiro, Outros) → mesa liberada |
+| Financeiro | Gerente | Faturamento, contas pagas, ticket médio, formas de pagamento, histórico e estorno |
+| Análises | Gerente | Tempo para assumir / de atendimento / total, por horário, por funcionário e por mesa |
+
+No cardápio (`/?mesa=N`) o cliente tem o botão **Chamar garçom**, sem login.
+
+### Variáveis de ambiente novas (backend)
+| Variável | Exemplo | Uso |
+|---|---|---|
+| `WAITERS` | `joao:senha1,maria:senha2` | Cria usuários com perfil Garçom |
+| `DATA_DIR` | `/var/data` | **Persiste o banco em disco também em produção** (sem ela, os dados somem ao reiniciar) |
+| `RATE_LIMIT_MAX` | `30` | Requisições/min por IP nas rotas públicas (pedidos e chamados) |
+
+Em **Configurações** defina o *Total de mesas* e o tempo para *Destacar chamado*.
+
+### Regras importantes
+- A conta de uma mesa = pedidos não cancelados e ainda não pagos. Não existe cadastro de consumo paralelo.
+- O pagamento é validado no servidor (conta aberta, mesmos pedidos/valor, idempotência). Desconto só pelo gerente.
+- Pagamentos nunca são apagados: o gerente pode **estornar** com motivo; tudo fica em `/api/audit`.
+- Pedido já pago não pode ser cancelado (estorne antes).
+
+### Qualidade
+```bash
+npm test        # testes de integração e de cálculo (node:test, sem dependências)
+npm run check   # sintaxe de todos os JS e scripts inline dos HTML
+```

@@ -28,6 +28,21 @@
         <span class="nav-icon">📋</span> Pedidos
         <span class="nav-badge" id="orders-badge" style="display:none">0</span>
       </button>
+      <button class="nav-item" data-nav="calls">
+        <span class="nav-icon">🙋</span> Chamados
+        <span class="nav-badge" id="calls-badge" style="display:none">0</span>
+      </button>
+      <button class="nav-item" data-nav="accounts">
+        <span class="nav-icon">🧾</span> Contas
+      </button>
+
+      <div class="nav-label">Gestão</div>
+      <button class="nav-item" data-nav="finance">
+        <span class="nav-icon">💰</span> Financeiro
+      </button>
+      <button class="nav-item" data-nav="analytics">
+        <span class="nav-icon">📊</span> Análises
+      </button>
 
       <div class="nav-label">Cardápio</div>
       <button class="nav-item" data-nav="products">
@@ -60,13 +75,16 @@
     <div class="header-actions">
       <span id="polling-indicator"
         style="font-size:.72rem;color:var(--success);opacity:0;transition:opacity .3s;display:flex;align-items:center;gap:5px"></span>
-      <a href="/kitchen" class="btn btn-ghost btn-sm" target="_blank">👨‍🍳 Cozinha</a>
+      <a href="/kitchen" class="btn btn-ghost btn-sm" target="_blank" id="link-kitchen">👨‍🍳 Cozinha</a>
       <a href="/?mesa=1"  class="btn btn-ghost btn-sm" target="_blank">📱 Cardápio</a>
     </div>
   </header>
 
   <!-- ══ MAIN ══ -->
   <main class="app-main">
+
+    <!-- Faixa discreta: chamados esperando além do limite -->
+    <div class="calls-strip" id="calls-strip" role="status" aria-live="polite"></div>
 
     <!-- ── DASHBOARD ── -->
     <section id="section-dashboard" class="section">
@@ -78,6 +96,23 @@
         <button class="btn btn-ghost btn-sm" onclick="Dashboard.load()">↻ Atualizar</button>
       </div>
 
+      <!-- Visão geral do restaurante (gerente) — dados de pagamentos e chamados -->
+      <div id="overview-block" hidden>
+        <div class="section-block-title">Visão geral do restaurante</div>
+        <div class="kpi-grid kpi-grid-3" id="overview-kpis"></div>
+        <div class="two-col" style="margin-bottom:20px">
+          <div class="card">
+            <div class="card-title">💳 Formas de pagamento (hoje)</div>
+            <div class="top-items" id="overview-methods"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">🙋 Chamados por horário (hoje)</div>
+            <div id="overview-calls-hour" style="min-height:90px;margin-top:8px"></div>
+          </div>
+        </div>
+        <div class="section-block-title">Pedidos</div>
+      </div>
+
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon blue">📦</div>
@@ -87,12 +122,12 @@
         <div class="stat-card">
           <div class="stat-icon green">💰</div>
           <div class="stat-value" id="stat-revenue" style="font-size:1.3rem">—</div>
-          <div class="stat-label">Faturamento hoje</div>
+          <div class="stat-label">Vendido hoje (pedidos)</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon amber">🎯</div>
           <div class="stat-value" id="stat-avg" style="font-size:1.3rem">—</div>
-          <div class="stat-label">Ticket médio</div>
+          <div class="stat-label">Ticket médio por pedido</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon red">⏳</div>
@@ -103,7 +138,7 @@
 
       <div class="two-col" style="margin-bottom:20px">
         <div class="card">
-          <div class="card-title">📈 Receita por hora (hoje)</div>
+          <div class="card-title">📈 Vendas por hora (pedidos)</div>
           <div id="revenue-chart" style="min-height:90px;margin-top:8px"></div>
         </div>
         <div class="card">
@@ -174,6 +209,125 @@
       <div class="orders-board" id="orders-board">
         <div class="empty-state" style="grid-column:1/-1">
           <div class="empty-state-desc">Carregando…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CHAMADOS ── -->
+    <section id="section-calls" class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Chamados</h2>
+          <p class="section-subtitle" id="calls-subtitle">Pedidos de atendimento feitos pelas mesas</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="Calls.load()">↻ Atualizar</button>
+      </div>
+      <div class="calls-board" id="calls-board">
+        <div class="empty-state" style="grid-column:1/-1"><div class="empty-state-desc">Carregando…</div></div>
+      </div>
+    </section>
+
+    <!-- ── CONTAS ── -->
+    <section id="section-accounts" class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Contas</h2>
+          <p class="section-subtitle">Consumo em aberto por mesa, a partir dos pedidos</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="Accounts.load()">↻ Atualizar</button>
+      </div>
+      <div class="kpi-grid" id="accounts-summary"></div>
+      <div class="tables-grid" id="accounts-grid">
+        <div class="empty-state" style="grid-column:1/-1"><div class="empty-state-desc">Carregando…</div></div>
+      </div>
+    </section>
+
+    <!-- ── FINANCEIRO ── -->
+    <section id="section-finance" class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Financeiro</h2>
+          <p class="section-subtitle">Pagamentos registrados · <span id="finance-range-label"></span></p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="Finance.load()">↻ Atualizar</button>
+      </div>
+      <div id="finance-period"></div>
+      <div class="kpi-grid kpi-grid-3" id="finance-kpis"></div>
+      <p class="data-note" id="finance-extras" style="margin:-8px 0 16px"></p>
+
+      <div class="two-col" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-title">💳 Formas de pagamento</div>
+          <div class="top-items" id="finance-methods"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📈 Faturamento por dia</div>
+          <div id="finance-daily" style="min-height:120px;margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🧾 Pagamentos do período</div>
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Data</th><th>Mesa</th><th>Forma</th><th class="num">Valor</th><th>Registrado por</th><th>Situação</th><th></th></tr></thead>
+            <tbody id="finance-payments"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ANÁLISES ── -->
+    <section id="section-analytics" class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Análises</h2>
+          <p class="section-subtitle">Dados da operação · <span id="analytics-range-label"></span></p>
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-analytics-tab="service">Atendimento</button>
+          <button class="filter-tab" data-analytics-tab="tables">Mesas</button>
+        </div>
+      </div>
+      <div id="analytics-period"></div>
+
+      <div id="analytics-service">
+        <div class="kpi-grid" id="service-kpis"></div>
+        <div class="two-col" style="margin-bottom:20px">
+          <div class="card">
+            <div class="card-title">🙋 Chamados por horário</div>
+            <div id="service-count-hour" style="min-height:110px;margin-top:8px"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">⏱ Tempo médio total por horário</div>
+            <div id="service-time-hour" style="min-height:110px;margin-top:8px"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">👥 Atendimento por funcionário</div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Funcionário</th><th class="num">Assumidos</th><th class="num">Concluídos</th><th class="num">Tempo médio p/ assumir</th><th class="num">Tempo médio de atendimento</th></tr></thead>
+              <tbody id="service-staff"></tbody>
+            </table>
+          </div>
+          <p class="data-note">
+            Métricas operacionais para apoiar a sua leitura. O tempo de cada pessoa depende do setor, do horário e do tipo de pedido.
+            <span id="service-types"></span>
+          </p>
+        </div>
+      </div>
+
+      <div id="analytics-tables" hidden>
+        <div class="card">
+          <div class="card-title">🪑 Desempenho por mesa</div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Mesa</th><th class="num">Faturamento</th><th class="num">Contas</th><th class="num">Pedidos</th><th class="num">Ticket médio</th><th class="num">Permanência média</th><th class="num">Chamados</th><th class="num">Chamados/dia</th></tr></thead>
+              <tbody id="tables-body"></tbody>
+            </table>
+          </div>
+          <p class="data-note">Permanência: do primeiro pedido da conta até o pagamento. Faturamento e contas consideram apenas pagamentos não estornados.</p>
         </div>
       </div>
     </section>
@@ -271,6 +425,16 @@
                 <input id="set-close" class="form-control" type="time" />
               </div>
             </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="set-table-count">Total de mesas</label>
+                <input id="set-table-count" class="form-control" type="number" min="0" max="500" step="1" placeholder="0 = não informar" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="set-call-alert">Destacar chamado após (min)</label>
+                <input id="set-call-alert" class="form-control" type="number" min="0.5" max="60" step="0.5" />
+              </div>
+            </div>
             <button class="btn btn-primary" id="btn-save-settings">Salvar configurações</button>
           </div>
         </div>
@@ -316,6 +480,7 @@
               </div>
             </div>
             <p style="font-size:.72rem;color:var(--text-muted);margin-top:8px">
+              Garçons: defina WAITERS=nome:senha,nome2:senha2 no servidor. Eles acessam Chamados, Contas e Pedidos.<br>
               Para alterar credenciais, use variáveis de ambiente no servidor.
             </p>
           </div>
@@ -390,6 +555,10 @@
 <script src="/js/orders.js"></script>
 <script src="/js/dashboard.js"></script>
 <script src="/js/settings.js"></script>
+<script src="/js/calls.js"></script>
+<script src="/js/accounts.js"></script>
+<script src="/js/finance.js"></script>
+<script src="/js/analytics.js"></script>
 <script src="/js/app.js"></script>
 <script>
   document.getElementById('dash-date').textContent =

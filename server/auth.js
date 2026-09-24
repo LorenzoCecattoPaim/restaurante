@@ -132,6 +132,11 @@ const SettingsController = {
     const db   = getDB();
     const body = await readBody(req);
     db.settings = { ...db.settings, ...body };
+    // Campos numéricos usados por chamados/contas
+    if (body.tableCount !== undefined)
+      db.settings.tableCount = Math.max(0, Math.min(500, parseInt(body.tableCount, 10) || 0));
+    if (body.callAlertSeconds !== undefined)
+      db.settings.callAlertSeconds = Math.max(30, Math.min(3600, parseInt(body.callAlertSeconds, 10) || 180));
     markDirty();
     json(res, 200, { data: db.settings });
   },

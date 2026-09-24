@@ -7,7 +7,7 @@ const http = require('http');
 const url  = require('url');
 
 const { router }               = require('./routes');
-const { initDB, getDB, markDirty } = require('./db');
+const { initDB, getDB, markDirty, flush, IS_PERSISTENT } = require('./db');
 
 const PORT           = process.env.PORT || 3000;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
@@ -15,7 +15,7 @@ const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 // ─── Rate limiting (por IP) ───────────────────────────────────
 const rateMap = new Map();
 const RL_WINDOW = 60_000;  // 1 minuto
-const RL_MAX    = 30;      // 30 req/min por IP (pedidos públicos)
+const RL_MAX    = Number(process.env.RATE_LIMIT_MAX) || 30; // req/min por IP (rotas públicas)
 
 function isRateLimited(ip) {
   const now   = Date.now();
@@ -99,8 +99,10 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Rate limit na criação de pedidos (rota pública)
-  if (pathname === '/api/orders' && req.method === 'POST') {
+  // Rate limit nas rotas públicas de escrita (pedidos e chamados de garçom)
+  const isPublicWrite = req.method === 'POST' &&
+    (pathname === '/api/orders' || pathname === '/api/calls' || /^\/api\/calls\/\d+\/client-cancel$/.test(pathname));
+  if (isPublicWrite) {
     const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
       || req.socket.remoteAddress;
     if (isRateLimited(ip)) {
@@ -119,6 +121,7 @@ function shutdown(sig) {
   if (shutting) return;
   shutting = true;
   console.log(`\n📴 ${sig} — encerrando...`);
+  flush(); // grava o último estado pendente antes de sair
   server.close(() => { console.log('✅ Servidor encerrado'); process.exit(0); });
   setTimeout(() => process.exit(1), 10_000);
 }
@@ -135,7 +138,7 @@ initDB(() => {
     console.log(`   💚 Health  → http://localhost:${PORT}/health`);
     console.log(`   🔌 API     → http://localhost:${PORT}/api/`);
     console.log(`   🌐 CORS    → ${ALLOWED_ORIGIN}`);
-    console.log(`   🔐 Admin   → admin / ${process.env.ADMIN_PASS || 'Lore4545!'}\n`);
+    console.log(`   💾 Dados   → ${IS_PERSISTENT ? 'persistidos em arquivo' : 'SOMENTE EM MEMÓRIA (perdidos ao reiniciar)'}\n`);
   });
   setInterval(cleanSessions, 60 * 60_000);
 });

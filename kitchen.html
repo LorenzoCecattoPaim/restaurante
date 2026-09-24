@@ -98,6 +98,7 @@ const STATUS_LABEL={recebido:'Recebido',em_preparo:'Em preparo',pronto:'Pronto'}
 setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});},1000);
 document.getElementById('clock').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
 function em(iso){return Math.floor((Date.now()-new Date(iso))/60000);}
 function tcls(m){return m>=15?'urgent':m>=8?'warn':'ok';}
 function tlbl(m){return m<1?'Agora':m<60?`${m}min`:`${Math.floor(m/60)}h${m%60}m`;}
@@ -113,13 +114,13 @@ function render(){
     const f=FLOW[o.status]||{}, m=em(o.createdAt);
     return `<div class="ticket" data-id="${o.id}" data-status="${o.status}">
       <div class="ticket-header">
-        <div><div class="ticket-id">#${String(o.id).padStart(4,'0')}</div><div class="ticket-table">Mesa ${o.tableNumber}</div></div>
+        <div><div class="ticket-id">#${String(o.id).padStart(4,'0')}</div><div class="ticket-table">Mesa ${esc(o.tableNumber)}</div></div>
         <span class="ts ${o.status}">${STATUS_LABEL[o.status]||o.status}</span>
       </div>
       <div class="ticket-body">
-        <div class="ticket-customer">👤 ${o.customerName}</div>
-        ${o.notes?`<div class="ticket-note">⚠️ ${o.notes}</div>`:''}
-        <div class="ticket-items">${o.items.map(i=>`<div class="ticket-item"><span class="ticket-qty">${i.quantity}×</span><span>${i.productName}</span></div>`).join('')}</div>
+        <div class="ticket-customer">👤 ${esc(o.customerName)}</div>
+        ${o.notes?`<div class="ticket-note">⚠️ ${esc(o.notes)}</div>`:''}
+        <div class="ticket-items">${o.items.map(i=>`<div class="ticket-item"><span class="ticket-qty">${i.quantity}×</span><span>${esc(i.productName)}</span></div>`).join('')}</div>
       </div>
       <div class="ticket-footer">
         <span class="ticket-timer ${tcls(m)}" data-created="${o.createdAt}">🕐 ${tlbl(m)}</span>

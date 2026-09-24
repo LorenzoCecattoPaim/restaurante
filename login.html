@@ -58,11 +58,6 @@
     </div>
     <button class="btn-login" id="btn"><span id="lbl">Entrar</span></button>
     <div class="err" id="err"><span>⚠️</span><span id="err-txt"></span></div>
-    <div class="quick">
-      <div class="quick-title">Acesso rápido (MVP)</div>
-      <button class="qb" onclick="fill('admin','Lore4545!')"><span>admin / Lore4545!</span><span class="qbadge">Gerente</span></button>
-      <button class="qb" onclick="fill('cozinha','Lore4545!')"><span>cozinha / Lore4545!</span><span class="qbadge">Cozinha</span></button>
-    </div>
   </div>
   <p class="foot">RestaurOS MVP</p>
 </div>
@@ -70,7 +65,6 @@
   const API_URL = (window.API_BASE_URL||'').replace(/\/$/,'');
   if (localStorage.getItem('rs_token')) window.location.href='/admin.html';
 
-  function fill(u,p){ document.getElementById('u').value=u; document.getElementById('p').value=p; hideErr(); }
   function showErr(m){ const e=document.getElementById('err'); document.getElementById('err-txt').textContent=m; e.style.display='flex'; }
   function hideErr(){ document.getElementById('err').style.display='none'; }
   function setLoad(l){ const b=document.getElementById('btn'),lbl=document.getElementById('lbl'); b.disabled=l; lbl.innerHTML=l?'<div class="spinner"></div> Entrando…':'Entrar'; }

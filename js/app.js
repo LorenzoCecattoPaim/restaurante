@@ -5,6 +5,17 @@
 const App = (() => {
   let _current = 'dashboard';
 
+  // Telas liberadas por perfil (o servidor também valida cada rota)
+  const ROLE_SECTIONS = {
+    admin:   ['dashboard', 'orders', 'calls', 'accounts', 'finance', 'analytics', 'products', 'settings'],
+    kitchen: ['dashboard', 'orders', 'products', 'settings'],
+    waiter:  ['calls', 'accounts', 'orders'],
+  };
+  const ROLE_LABEL = { admin: 'Gerente', kitchen: 'Cozinha', waiter: 'Garçom' };
+  const _user = () => JSON.parse(localStorage.getItem('rs_user') || '{}');
+  const allowed = () => ROLE_SECTIONS[_user().role] || ROLE_SECTIONS.kitchen;
+  const can = section => allowed().includes(section);
+
   // ─── Auth guard ────────────────────────────────────────────
   async function checkAuth() {
     const token = localStorage.getItem('rs_token');
@@ -41,6 +52,7 @@ const App = (() => {
 
   // ─── Navegação ─────────────────────────────────────────────
   function navigate(section) {
+    if (!can(section)) section = allowed()[0];
     qsa('.section').forEach(s => s.classList.remove('active'));
     const target = qs(`#section-${section}`);
     if (target) target.classList.add('active');
@@ -53,6 +65,10 @@ const App = (() => {
       orders:    'Pedidos',
       products:  'Produtos',
       settings:  'Configurações',
+      calls:     'Chamados',
+      accounts:  'Contas',
+      finance:   'Financeiro',
+      analytics: 'Análises',
     };
     const el = qs('#header-title');
     if (el) el.textContent = titles[section] || section;
@@ -62,6 +78,23 @@ const App = (() => {
     if (section === 'dashboard') Dashboard.load();
     if (section === 'orders')    Orders.load();
     if (section === 'settings')  Settings.load();
+    if (section === 'calls')     Calls.load();
+    if (section === 'accounts')  Accounts.load();
+    if (section === 'finance')   Finance.load();
+    if (section === 'analytics') Analytics.load();
+  }
+
+  // Esconde itens de menu fora do perfil (e rótulos de grupo que ficarem vazios)
+  function applyRoleNav() {
+    qsa('.nav-item[data-nav]').forEach(i => { i.hidden = !can(i.dataset.nav); });
+    qsa('.nav-label').forEach(label => {
+      let el = label.nextElementSibling, any = false;
+      while (el && !el.classList.contains('nav-label')) {
+        if (el.matches('.nav-item[data-nav]') && !el.hidden) any = true;
+        el = el.nextElementSibling;
+      }
+      label.hidden = !any;
+    });
   }
 
   // ─── Init ──────────────────────────────────────────────────
@@ -69,11 +102,13 @@ const App = (() => {
     const ok = await checkAuth();
     if (!ok) return;
 
-    const user = JSON.parse(localStorage.getItem('rs_user') || '{}');
+    const user = _user();
     const nameEl = qs('#user-name');
     const roleEl = qs('#user-role');
     if (nameEl) nameEl.textContent = user.name || 'Admin';
-    if (roleEl) roleEl.textContent = user.role === 'admin' ? 'Gerente' : 'Cozinha';
+    if (roleEl) roleEl.textContent = ROLE_LABEL[user.role] || 'Cozinha';
+    applyRoleNav();
+    if (user.role === 'waiter') { const k = qs('#link-kitchen'); if (k) k.hidden = true; }
     const avatar = qs('#user-avatar');
     if (avatar) avatar.textContent = (user.name || 'A')[0].toUpperCase();
 
@@ -83,21 +118,26 @@ const App = (() => {
 
     qs('#btn-logout')?.addEventListener('click', logout);
 
-    await Promise.all([
-      Dashboard.init(),
-      Products.init(),
-      Orders.init(),
-      Settings.init(),
-    ]);
+    // Inicializa apenas os módulos que o perfil pode usar
+    const inits = [];
+    if (can('dashboard')) inits.push(Dashboard.init());
+    if (can('products'))  inits.push(Products.init());
+    if (can('orders'))    inits.push(Orders.init());
+    if (can('settings'))  inits.push(Settings.init());
+    if (can('calls'))     inits.push(Calls.init());
+    if (can('accounts'))  inits.push(Accounts.init());
+    if (can('finance'))   Finance.init();
+    if (can('analytics')) Analytics.init();
+    await Promise.all(inits);
 
-    navigate('dashboard');
+    navigate(allowed()[0]);
 
     setInterval(() => { if (_current === 'dashboard') Dashboard.load(); }, 30000);
   }
 
   document.addEventListener('DOMContentLoaded', init);
 
-  return { navigate, logout };
+  return { navigate, logout, can, current: () => _current };
 })();
 
 window.App = App;

@@ -47,6 +47,7 @@
 
 /* ─── Reset ──────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 html { font-size: 15px; -webkit-text-size-adjust: 100%; }
 body {
   font-family: var(--font-body);
@@ -1018,3 +1019,142 @@ select.form-control {
 
 /* ─── Toast warning ──────────────────────────────────────── */
 .toast-warning { border-left: 3px solid var(--warning); }
+
+/* ════════════════════════════════════════════════════════════
+   Operação integrada — chamados, contas, financeiro, análises
+   (reaproveita os tokens do design system acima)
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── Seletor de período ─────────────────────────────────── */
+.period-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; }
+.period-tabs { flex-wrap: wrap; }
+.period-custom { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .8rem; color: var(--text-secondary); }
+.period-custom[hidden] { display: none; }
+.period-custom .form-control { width: auto; padding: 6px 10px; font-size: .8rem; color-scheme: dark; }
+
+/* ─── Cards compactos de indicador ───────────────────────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
+.kpi-label { font-size: .72rem; color: var(--text-muted); font-weight: 500; }
+.kpi-value { font-size: 1.35rem; font-weight: 700; margin-top: 4px; letter-spacing: -.3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kpi-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kpi-sub   { font-size: .7rem; color: var(--text-secondary); margin-top: 2px; }
+.kpi.is-alert { border-color: rgba(239,68,68,.45); }
+.kpi.is-alert .kpi-value { color: var(--danger); }
+
+.section-block-title { font-size: .8rem; font-weight: 600; color: var(--text-secondary); margin: 6px 0 10px; }
+
+/* ─── Chamados ───────────────────────────────────────────── */
+.calls-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.call-card {
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+}
+.call-card.is-pending  { border-left: 3px solid var(--warning); }
+.call-card.is-accepted { border-left: 3px solid var(--info); }
+.call-card.is-late     { border-color: rgba(239,68,68,.55); border-left: 3px solid var(--danger); background: rgba(239,68,68,.05); }
+.call-card.is-done     { opacity: .55; }
+.call-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.call-table { font-size: 1.15rem; font-weight: 700; }
+.call-type  { font-size: .78rem; color: var(--text-secondary); margin-top: 2px; }
+.call-wait  { font-family: var(--font-mono); font-size: .82rem; color: var(--warning); white-space: nowrap; }
+.call-card.is-late .call-wait { color: var(--danger); font-weight: 600; }
+.call-meta  { font-size: .74rem; color: var(--text-muted); }
+.call-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.call-actions .btn { flex: 1; justify-content: center; min-height: 38px; }
+
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: .68rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.pill-warning { color: var(--warning); background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.2); }
+.pill-info    { color: var(--info);    background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.2); }
+.pill-success { color: var(--success); background: rgba(34,197,94,.1);  border: 1px solid rgba(34,197,94,.2); }
+.pill-muted   { color: var(--text-muted); background: rgba(90,91,104,.1); border: 1px solid rgba(90,91,104,.2); }
+.pill-danger  { color: var(--danger);  background: rgba(239,68,68,.1);  border: 1px solid rgba(239,68,68,.2); }
+
+/* Faixa discreta de chamados atrasados (visível fora da tela de chamados) */
+.calls-strip {
+  display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.25);
+  border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 16px; font-size: .8rem;
+}
+.calls-strip.show { display: flex; }
+.calls-strip-item { color: var(--text-primary); }
+.calls-strip-item b { color: var(--danger); font-family: var(--font-mono); font-weight: 600; }
+
+/* ─── Contas das mesas ───────────────────────────────────── */
+.tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.table-tile {
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px; text-align: left; color: var(--text-primary); display: flex; flex-direction: column; gap: 6px;
+  transition: border-color var(--transition), background var(--transition); min-height: 118px;
+}
+.table-tile:hover { border-color: var(--accent); background: var(--bg-raised); }
+.table-tile:focus-visible, .btn:focus-visible, .filter-tab:focus-visible, .nav-item:focus-visible, .method-btn:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.table-tile.is-free { opacity: .6; }
+.table-tile-name   { font-weight: 700; font-size: .95rem; }
+.table-tile-amount { font-size: 1.2rem; font-weight: 700; font-family: var(--font-mono); letter-spacing: -.5px; }
+.table-tile-meta   { font-size: .72rem; color: var(--text-muted); }
+.table-tile-flags  { display: flex; gap: 4px; flex-wrap: wrap; margin-top: auto; }
+
+.bill { background: var(--bg-raised); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 14px; }
+.bill-row { display: flex; justify-content: space-between; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: .85rem; }
+.bill-row:last-child { border-bottom: none; }
+.bill-row .num { font-family: var(--font-mono); white-space: nowrap; }
+.bill-row.muted { color: var(--text-secondary); font-size: .8rem; }
+.bill-row.total { font-weight: 700; font-size: 1rem; background: var(--bg-hover); }
+
+.method-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.method-btn {
+  background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-secondary); padding: 10px 4px; font-size: .78rem; font-weight: 600; transition: all var(--transition);
+}
+.method-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
+.method-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
+
+.notice { font-size: .78rem; border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 12px; }
+.notice-warning { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.25); color: #fcd34d; }
+.notice-success { background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.25); color: #86efac; }
+
+/* ─── Tabelas de dados (financeiro/análises) ─────────────── */
+.data-table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.data-table th { text-align: left; font-size: .7rem; font-weight: 600; color: var(--text-muted); padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.data-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.data-table td.num, .data-table th.num { text-align: right; font-family: var(--font-mono); }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr.is-voided td { color: var(--text-muted); text-decoration: line-through; }
+.data-table tr.is-voided td:nth-last-child(-n+2) { text-decoration: none; }
+.data-note { font-size: .72rem; color: var(--text-muted); margin-top: 10px; line-height: 1.5; }
+
+/* ─── Responsivo ─────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .method-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* No celular a barra lateral vira uma faixa de navegação rolável
+   (antes ela era ocultada e não havia como trocar de tela). */
+@media (max-width: 640px) {
+  .app-layout { grid-template-rows: auto auto 1fr; }
+  .sidebar {
+    grid-row: auto;
+    display: flex; position: sticky; top: 0; z-index: 50; height: auto;
+    flex-direction: row; align-items: center; border-right: none; border-bottom: 1px solid var(--border);
+    overflow-x: auto; overflow-y: hidden;
+  }
+  .sidebar-logo, .nav-label, .sidebar-user { display: none; }
+  .sidebar-nav { flex-direction: row; padding: 8px; gap: 4px; flex: none; }
+  .sidebar-nav .nav-item { width: auto; white-space: nowrap; padding: 8px 10px; }
+  .sidebar-footer { border-top: none; padding: 8px 8px 8px 0; }
+  .sidebar-footer .nav-item { margin-top: 0 !important; white-space: nowrap; padding: 8px 10px; }
+  .app-header { position: static; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-value { font-size: 1.1rem; }
+  .calls-board { grid-template-columns: 1fr; }
+  .tables-grid { grid-template-columns: repeat(2, 1fr); }
+  .method-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-badge, .status-em_preparo { animation: none; }
+}

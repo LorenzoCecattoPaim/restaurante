@@ -40,7 +40,12 @@ async function request(method, path, body = null, retries = 2) {
       }
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+      if (!res.ok) {
+        const err = new Error(data.error || `Erro ${res.status}`);
+        err.status = res.status;
+        err.data   = data;
+        throw err;
+      }
       return data;
 
     } catch (err) {
@@ -80,6 +85,28 @@ const API = {
   settings: {
     get:    ()  => request('GET', '/settings'),
     update: d   => request('PUT', '/settings', d),
+  },
+  calls: {
+    list:     ()          => request('GET',  '/calls'),
+    accept:   id          => request('POST', `/calls/${id}/accept`, null, 0),
+    complete: id          => request('POST', `/calls/${id}/complete`, null, 0),
+    cancel:   (id, reason)=> request('POST', `/calls/${id}/cancel`, { reason }, 0),
+  },
+  accounts: {
+    list: ()          => request('GET',  '/accounts'),
+    get:  table       => request('GET',  `/accounts/${encodeURIComponent(table)}`),
+    // retries = 0: pagamento nunca é reenviado automaticamente (a idempotencyKey cobre o resto)
+    pay:  (table, d)  => request('POST', `/accounts/${encodeURIComponent(table)}/pay`, d, 0),
+  },
+  payments: {
+    list: q           => request('GET',  `/payments?${q}`),
+    void: (id, reason)=> request('POST', `/payments/${id}/void`, { reason }, 0),
+  },
+  finance:   { get: q => request('GET', `/finance?${q}`) },
+  overview:  { get: q => request('GET', `/overview?${q}`) },
+  analytics: {
+    service: q => request('GET', `/analytics/service?${q}`),
+    tables:  q => request('GET', `/analytics/tables?${q}`),
   },
 };
 

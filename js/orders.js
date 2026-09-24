@@ -95,24 +95,25 @@ const Orders = (() => {
 
     const items = o.items.map(i => `
       <div class="order-item">
-        <span><span class="order-item-qty">×${i.quantity}</span>${i.productName}</span>
+        <span><span class="order-item-qty">×${i.quantity}</span>${esc(i.productName)}</span>
         <span>${Format.currency(i.unitPrice * i.quantity)}</span>
       </div>`).join('');
 
     const noteHtml = o.notes
-      ? `<div class="order-note">📝 ${o.notes}</div>` : '';
+      ? `<div class="order-note">📝 ${esc(o.notes)}</div>` : '';
 
     return `
       <div class="order-card" data-id="${o.id}">
         <div class="order-card-header">
           <div>
             <div class="order-number">#${String(o.id).padStart(4,'0')}</div>
-            <div class="order-table">Mesa ${o.tableNumber}</div>
+            <div class="order-table">Mesa ${esc(o.tableNumber)}</div>
+            ${o.paymentId ? '<span class="pill pill-success" style="margin-top:4px">Pago</span>' : ''}
           </div>
           <span class="status-badge status-${o.status}">${Format.statusLabel(o.status)}</span>
         </div>
         <div class="order-card-body">
-          <div class="order-customer">👤 ${o.customerName}</div>
+          <div class="order-customer">👤 ${esc(o.customerName)}</div>
           ${noteHtml}
           <div class="order-items">${items}</div>
           <div class="order-total">
@@ -129,7 +130,7 @@ const Orders = (() => {
             <button class="btn btn-ghost btn-sm" onclick="Orders.printOrder(${o.id})" title="Imprimir">🖨️</button>
           </div>
           <div style="display:flex;gap:6px">
-            ${o.status !== 'entregue' && o.status !== 'cancelado'
+            ${o.status !== 'entregue' && o.status !== 'cancelado' && !o.paymentId
               ? `<button class="btn btn-danger btn-sm" onclick="Orders.cancel(${o.id})">✕</button>`
               : ''}
             ${canAdvance
@@ -172,8 +173,8 @@ const Orders = (() => {
       render();
       updateBadge(_all.filter(o => ['recebido','em_preparo'].includes(o.status)).length);
       Toast.warning('Pedido cancelado');
-    } catch {
-      Toast.error('Erro ao cancelar');
+    } catch (e) {
+      Toast.error(e.message || 'Erro ao cancelar');
     }
   }
 
@@ -195,7 +196,7 @@ const Orders = (() => {
     overlay.innerHTML = `
       <div class="modal" style="max-width:480px">
         <div class="modal-header">
-          <h3 class="modal-title">Pedido #${String(o.id).padStart(4,'0')} — Mesa ${o.tableNumber}</h3>
+          <h3 class="modal-title">Pedido #${String(o.id).padStart(4,'0')} — Mesa ${esc(o.tableNumber)}</h3>
           <button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('open')">✕</button>
         </div>
         <div class="modal-body">
@@ -206,18 +207,18 @@ const Orders = (() => {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
             <div style="background:var(--bg-raised);padding:10px 12px;border-radius:6px">
               <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em">Cliente</div>
-              <div style="font-size:.875rem;font-weight:600;margin-top:2px">${o.customerName}</div>
+              <div style="font-size:.875rem;font-weight:600;margin-top:2px">${esc(o.customerName)}</div>
             </div>
             <div style="background:var(--bg-raised);padding:10px 12px;border-radius:6px">
               <div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em">Tempo</div>
               <div style="font-size:.875rem;font-weight:600;margin-top:2px">${Format.elapsed(o.createdAt)}</div>
             </div>
           </div>
-          ${o.notes ? `<div class="order-note" style="margin-bottom:14px">📝 ${o.notes}</div>` : ''}
+          ${o.notes ? `<div class="order-note" style="margin-bottom:14px">📝 ${esc(o.notes)}</div>` : ''}
           <div style="background:var(--bg-raised);border-radius:8px;overflow:hidden;margin-bottom:14px">
             ${o.items.map(i => `
               <div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)">
-                <span style="font-size:.85rem"><strong>${i.quantity}×</strong> ${i.productName}</span>
+                <span style="font-size:.85rem"><strong>${i.quantity}×</strong> ${esc(i.productName)}</span>
                 <span style="font-size:.85rem;font-family:var(--font-mono)">${Format.currency(i.unitPrice * i.quantity)}</span>
               </div>`).join('')}
             <div style="display:flex;justify-content:space-between;padding:12px 14px;font-weight:700">
@@ -259,13 +260,13 @@ const Orders = (() => {
 <h1>🍽️ RestaurOS</h1>
 <div class="info">
   <div class="row"><span>Pedido:</span><b>#${String(o.id).padStart(4,'0')}</b></div>
-  <div class="row"><span>Mesa:</span><b>${o.tableNumber}</b></div>
-  <div class="row"><span>Cliente:</span><span>${o.customerName}</span></div>
+  <div class="row"><span>Mesa:</span><b>${esc(o.tableNumber)}</b></div>
+  <div class="row"><span>Cliente:</span><span>${esc(o.customerName)}</span></div>
   <div class="row"><span>Hora:</span><span>${Format.fullDate(o.createdAt)}</span></div>
 </div>
-${o.notes ? `<div class="note">⚠ ${o.notes}</div>` : ''}
+${o.notes ? `<div class="note">⚠ ${esc(o.notes)}</div>` : ''}
 <div class="items">
-${o.items.map(i => `<div class="row"><span>${i.quantity}× ${i.productName}</span><span>R$${(i.unitPrice*i.quantity).toFixed(2).replace('.',',')}</span></div>`).join('')}
+${o.items.map(i => `<div class="row"><span>${i.quantity}× ${esc(i.productName)}</span><span>R$${(i.unitPrice*i.quantity).toFixed(2).replace('.',',')}</span></div>`).join('')}
 </div>
 <div class="total"><span>TOTAL</span><span>R$${o.total.toFixed(2).replace('.',',')}</span></div>
 <p style="text-align:center;margin-top:14px;font-size:11px;color:#666">Obrigado pela preferência!</p>

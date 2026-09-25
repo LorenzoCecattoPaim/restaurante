@@ -7,7 +7,7 @@ const http = require('http');
 const url  = require('url');
 
 const { router }               = require('./routes');
-const { initDB, getDB, markDirty, flush, IS_PERSISTENT } = require('./db');
+const { initDB, getDB, markDirty, flush, IS_PERSISTENT, PERSISTENCE_MODE, isPersistenceConnected } = require('./db');
 
 const PORT           = process.env.PORT || 3000;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
@@ -88,6 +88,8 @@ const server = http.createServer((req, res) => {
       status: 'ok',
       uptime: Math.floor(process.uptime()),
       env:    process.env.NODE_ENV || 'development',
+      persistence: PERSISTENCE_MODE,             // 'supabase' | 'file' | 'memory'
+      persistenceConnected: isPersistenceConnected(), // false = Supabase configurado mas fora do ar agora
     }));
     return;
   }
@@ -138,7 +140,11 @@ initDB(() => {
     console.log(`   💚 Health  → http://localhost:${PORT}/health`);
     console.log(`   🔌 API     → http://localhost:${PORT}/api/`);
     console.log(`   🌐 CORS    → ${ALLOWED_ORIGIN}`);
-    console.log(`   💾 Dados   → ${IS_PERSISTENT ? 'persistidos em arquivo' : 'SOMENTE EM MEMÓRIA (perdidos ao reiniciar)'}\n`);
+    let modeLabel = { supabase: 'persistidos no Supabase ☁️', file: 'persistidos em arquivo', memory: 'SOMENTE EM MEMÓRIA (perdidos ao reiniciar)' }[PERSISTENCE_MODE];
+    if (PERSISTENCE_MODE === 'supabase' && !isPersistenceConnected()) {
+      modeLabel = '⚠️  Supabase configurado mas SEM CONEXÃO agora — rodando em memória até a próxima gravação';
+    }
+    console.log(`   💾 Dados   → ${modeLabel}\n`);
   });
   setInterval(cleanSessions, 60 * 60_000);
 });

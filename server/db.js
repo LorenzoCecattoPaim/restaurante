@@ -1,25 +1,46 @@
 // ============================================================
-// db.js — Banco de dados com dois modos:
+// db.js — Banco de dados com três modos, escolhidos automaticamente
+// pelas variáveis de ambiente presentes (nada precisa mudar em
+// nenhum outro arquivo — accounts.js, calls.js, employees.js etc.
+// continuam lendo/escrevendo em getDB().xxx normalmente):
 //
-//  DESENVOLVIMENTO (local):
-//    Persiste em data/db.json — dados sobrevivem ao restart
+//  MEMÓRIA (padrão em produção, sem nenhuma var extra):
+//    Filesystem efêmero → dados somem ao reiniciar/redeployar
 //
-//  PRODUÇÃO (Railway, Render, etc.):
-//    Filesystem efêmero → dados ficam em memória
-//    Para persistência real em produção: usar Railway Volumes
-//    ou migrar para PostgreSQL (ver README)
+//  ARQUIVO (dev local, ou produção com DATA_DIR apontando pra um
+//  disco persistente):
+//    Persiste em <DATA_DIR>/db.json
+//
+//  SUPABASE (SUPABASE_URL + SUPABASE_SERVICE_KEY definidos):
+//    O estado inteiro (o mesmo "blob" que hoje vira db.json) é
+//    salvo como UMA linha jsonb na tabela restauros_state via
+//    REST (PostgREST), usando fetch nativo do Node — sem
+//    dependência nova. Ver scripts/supabase_setup.sql.
+//    Isso NÃO é um schema relacional por tabela: é o jeito mais
+//    simples de dar persistência real sem reescrever auth.js,
+//    calls.js, accounts.js, employees.js etc. Se um dia quiser
+//    tabelas de verdade (products, orders, users...) pra rodar
+//    SQL/relatórios direto no Postgres, isso é um projeto à parte,
+//    maior — me avise se quiser seguir esse caminho depois.
 // ============================================================
 
 const fs   = require('fs');
 const path = require('path');
 
 const IS_PROD = process.env.NODE_ENV === 'production';
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const USE_SUPABASE = !!(SUPABASE_URL && SUPABASE_KEY) && process.env.DB_MEMORY !== '1';
+const SUPABASE_TABLE = 'restauros_state';
+const SUPABASE_ROW_ID = process.env.SUPABASE_STATE_ID || 'main';
+
 // DATA_DIR (opcional): diretório persistente (ex.: disco do Render/Railway).
 // Quando definido, o banco é salvo em arquivo também em produção.
 // DB_MEMORY=1 força modo memória (usado pelos testes automatizados).
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const DB_PATH  = path.join(DATA_DIR, 'db.json');
-const PERSIST  = process.env.DB_MEMORY !== '1' && (!IS_PROD || !!process.env.DATA_DIR);
+const PERSIST  = !USE_SUPABASE && process.env.DB_MEMORY !== '1' && (!IS_PROD || !!process.env.DATA_DIR);
 
 // ─── Dados iniciais (seed) ────────────────────────────────────
 function buildSeed() {
@@ -101,9 +122,60 @@ function ensureShape(db) {
 
 let _db           = null;
 let _persistTimer = null;
+let _supabaseOk   = true; // reflete a ÚLTIMA tentativa real de falar com o Supabase (não só se as env vars existem)
+
+// ─── Supabase (REST/PostgREST) — sem dependência nova, usa fetch nativo ──
+function supabaseHeaders(extra) {
+  return {
+    apikey: SUPABASE_KEY,
+    Authorization: `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json',
+    ...extra,
+  };
+}
+
+async function supabaseLoad() {
+  const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?id=eq.${encodeURIComponent(SUPABASE_ROW_ID)}&select=data`;
+  const res = await fetch(url, { headers: supabaseHeaders() });
+  if (!res.ok) throw new Error(`Supabase GET ${res.status}: ${await res.text()}`);
+  const rows = await res.json();
+  return rows.length ? rows[0].data : null;
+}
+
+async function supabaseSave(data) {
+  const url = `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: supabaseHeaders({ Prefer: 'resolution=merge-duplicates,return=minimal' }),
+    body: JSON.stringify({ id: SUPABASE_ROW_ID, data, updated_at: new Date().toISOString() }),
+  });
+  if (!res.ok) throw new Error(`Supabase POST ${res.status}: ${await res.text()}`);
+}
 
 // ─── Init ─────────────────────────────────────────────────────
 function initDB(callback) {
+  if (USE_SUPABASE) {
+    supabaseLoad()
+      .then(data => {
+        _db = data ? data : buildSeed();
+        ensureShape(_db);
+        console.log(data ? '✅ Banco carregado do Supabase' : '✅ Banco criado no Supabase (primeira vez)');
+        return supabaseSave(_db); // garante a linha gravada já na subida (primeira vez ou pós-migration)
+      })
+      .then(() => { _supabaseOk = true; callback(); })
+      .catch(err => {
+        // Sem a rede/tabela disponível, não trava o app: sobe com o seed em
+        // memória e mantém tentando salvar nas próximas escritas (persist()).
+        _supabaseOk = false;
+        console.error('⚠️  Falha ao conectar no Supabase:', err.message);
+        console.error('   → Confira SUPABASE_URL/SUPABASE_SERVICE_KEY e se rodou scripts/supabase_setup.sql');
+        console.error('   → Subindo em memória por enquanto; vai tentar salvar de novo a cada gravação.');
+        _db = ensureShape(buildSeed());
+        callback();
+      });
+    return;
+  }
+
   if (!PERSIST) {
     // Produção sem DATA_DIR: começa sempre do seed (filesystem efêmero)
     _db = ensureShape(buildSeed());
@@ -139,8 +211,18 @@ function initDB(callback) {
   callback();
 }
 
-// ─── Persistência (só em dev) ─────────────────────────────────
+// ─── Persistência ───────────────────────────────────────────────
 function persist() {
+  if (USE_SUPABASE) {
+    clearTimeout(_persistTimer);
+    _persistTimer = setTimeout(() => {
+      supabaseSave(_db)
+        .then(() => { _supabaseOk = true; })
+        .catch(e => { _supabaseOk = false; console.error('Erro ao salvar no Supabase:', e.message); });
+    }, 300);
+    return;
+  }
+
   if (!PERSIST) return; // modo memória não persiste em arquivo
   clearTimeout(_persistTimer);
   _persistTimer = setTimeout(() => {
@@ -157,8 +239,16 @@ function persist() {
 
 // Grava imediatamente (usado no desligamento para não perder o último debounce)
 function flush() {
-  if (!PERSIST || !_db) return;
   clearTimeout(_persistTimer);
+  if (!_db) return;
+
+  if (USE_SUPABASE) {
+    // fire-and-forget: shutdown não pode esperar uma requisição de rede
+    supabaseSave(_db).catch(e => console.error('Erro ao salvar no Supabase (flush):', e.message));
+    return;
+  }
+
+  if (!PERSIST) return;
   try {
     const tmp = DB_PATH + '.tmp';
     fs.writeFileSync(tmp, JSON.stringify(_db, null, 2), 'utf8');
@@ -170,5 +260,11 @@ function flush() {
 
 function getDB()     { return _db; }
 function markDirty() { persist(); }
+function isPersistenceConnected() { return USE_SUPABASE ? _supabaseOk : true; }
 
-module.exports = { initDB, getDB, markDirty, flush, ensureShape, IS_PERSISTENT: PERSIST };
+module.exports = {
+  initDB, getDB, markDirty, flush, ensureShape,
+  IS_PERSISTENT: PERSIST || USE_SUPABASE,
+  PERSISTENCE_MODE: USE_SUPABASE ? 'supabase' : PERSIST ? 'file' : 'memory',
+  isPersistenceConnected,
+};

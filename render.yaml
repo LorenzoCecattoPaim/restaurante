@@ -29,3 +29,12 @@ services:
       # ✅ CORRIGIDO AQUI
       - key: ALLOWED_ORIGIN
         value: https://restaurante-delta-ashy.vercel.app
+
+      # Persistência real (Supabase) — sync:false = Render pede o valor no
+      # dashboard (Environment) e NUNCA guarda o segredo neste arquivo/Git.
+      # Sem essas duas vars, o app volta pro modo memória de sempre.
+      # Passo a passo: ver scripts/supabase_setup.sql e o README.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false

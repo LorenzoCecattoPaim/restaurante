@@ -61,6 +61,18 @@ function requireAuth(req, res, next, allowedRoles = ['admin', 'kitchen']) {
     return false;
   }
 
+  // A sessão guarda uma cópia da role tirada no momento do login. Para que
+  // uma desativação (gerente → Equipe → Desativar) tenha efeito imediato —
+  // e não só depois que a sessão expirar sozinha em até 8h — revalidamos
+  // contra o cadastro atual do usuário a cada requisição autenticada.
+  const user = db.users.find(u => u.id === session.userId);
+  if (!user || user.active === false) {
+    delete db.sessions[token];
+    markDirty();
+    json(res, 401, { error: 'Conta desativada — fale com o gerente' });
+    return false;
+  }
+
   if (!allowedRoles.includes(session.role)) {
     json(res, 403, { error: 'Acesso negado' });
     return false;
@@ -82,6 +94,10 @@ const AuthController = {
 
     if (!user) {
       return json(res, 401, { error: 'Usuário ou senha incorretos' });
+    }
+
+    if (user.active === false) {
+      return json(res, 403, { error: 'Conta desativada. Fale com o gerente.' });
     }
 
     const token = generateToken();

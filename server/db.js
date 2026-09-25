@@ -37,8 +37,8 @@ function buildSeed() {
     orders: [],
     categories: ['Lanches', 'Acompanhamentos', 'Bebidas', 'Sobremesas', 'Combos', 'Entradas'],
     users: [
-      { id:1, username: process.env.ADMIN_USER     || 'admin',   password: process.env.ADMIN_PASS     || 'Lore4545!',   role:'admin',   name:'Administrador' },
-      { id:2, username: process.env.KITCHEN_USER   || 'cozinha', password: process.env.KITCHEN_PASS   || 'Lore4545!', role:'kitchen', name:'Cozinha' },
+      { id:1, username: process.env.ADMIN_USER     || 'admin',   password: process.env.ADMIN_PASS     || 'Lore4545!',   role:'admin',   name:'Administrador', active:true, phone:'', createdAt:now },
+      { id:2, username: process.env.KITCHEN_USER   || 'cozinha', password: process.env.KITCHEN_PASS   || 'Lore4545!', role:'kitchen', name:'Cozinha', active:true, phone:'', createdAt:now },
     ],
     settings: {
       restaurantName: process.env.RESTAURANT_NAME || 'RestaurOS',
@@ -70,7 +70,18 @@ function ensureShape(db) {
   // Total de mesas do salão (0 = não informado → "mesas ocupadas" sem denominador)
   if (db.settings.tableCount === undefined) db.settings.tableCount = 0;
 
-  // Garçons: WAITERS="joao:senha1,maria:senha2" (opcional)
+  // "Migration" idempotente: usuários de bancos antigos (db.json) não tinham
+  // active/phone/createdAt — passam a existir com um valor padrão seguro.
+  const seedNow = new Date().toISOString();
+  for (const u of db.users) {
+    if (u.active === undefined)   u.active    = true;
+    if (u.phone === undefined)    u.phone     = '';
+    if (!u.createdAt)             u.createdAt = seedNow;
+  }
+  if (!db._nextUserId) db._nextUserId = db.users.reduce((m, u) => Math.max(m, u.id), 0) + 1;
+
+  // Garçons: WAITERS="joao:senha1,maria:senha2" (opcional — bootstrap por env var;
+  // o cadastro normal agora também pode ser feito pela tela Equipe do admin)
   const waiters = (process.env.WAITERS || '').split(',').map(s => s.trim()).filter(Boolean);
   for (const entry of waiters) {
     const sep = entry.indexOf(':');
@@ -82,9 +93,8 @@ function ensureShape(db) {
       if (existing.role === 'waiter') existing.password = password;
       continue;
     }
-    const nextId = db.users.reduce((m, u) => Math.max(m, u.id), 0) + 1;
     const name = username.charAt(0).toUpperCase() + username.slice(1);
-    db.users.push({ id: nextId, username, password, role: 'waiter', name });
+    db.users.push({ id: db._nextUserId++, username, password, role: 'waiter', name, active: true, phone: '', createdAt: seedNow });
   }
   return db;
 }

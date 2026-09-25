@@ -5,6 +5,7 @@
     { "src": "/js/(.*)",  "dest": "/js/$1" },
     { "src": "/css/(.*)", "dest": "/css/$1" },
     { "src": "/admin",    "dest": "/admin.html" },
+    { "src": "/waiter",   "dest": "/waiter.html" },
     { "src": "/login",    "dest": "/login.html" },
     { "src": "/kitchen",  "dest": "/kitchen.html" },
     { "src": "/",         "dest": "/index.html" }

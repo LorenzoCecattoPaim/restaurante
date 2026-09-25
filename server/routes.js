@@ -7,6 +7,7 @@ const { AuthController, SettingsController, CategoriesController, requireAuth } 
 const { CallsController }                        = require('./calls');
 const { AccountsController, PaymentsController } = require('./accounts');
 const { AnalyticsController }                    = require('./analytics');
+const { EmployeesController }                    = require('./employees');
 
 function json(res, status, data) {
   if (res.headersSent) return;
@@ -113,6 +114,16 @@ function route(req, res, parsed) {
     if (method === 'POST' && id && sub === 'void')     return PaymentsController.void(req, res, id);
   }
   if (resource === 'audit' && method === 'GET')        return PaymentsController.auditLog(req, res, query);
+
+  // ── Equipe (garçons e cozinha — gerente) ────────────────
+  if (resource === 'employees') {
+    if (method === 'GET'  && !idRaw)                        return EmployeesController.list(req, res);
+    if (method === 'POST' && !idRaw)                        return EmployeesController.create(req, res);
+    if (method === 'GET'  &&  id && !sub)                   return EmployeesController.detail(req, res, id, query);
+    if (method === 'PUT'  &&  id && !sub)                   return EmployeesController.update(req, res, id);
+    if (method === 'POST' &&  id && sub === 'activate')     return EmployeesController.setActive(req, res, id, true);
+    if (method === 'POST' &&  id && sub === 'deactivate')   return EmployeesController.setActive(req, res, id, false);
+  }
 
   // ── Financeiro e análises (gerente) ─────────────────────
   if (resource === 'finance'  && method === 'GET')     return AnalyticsController.finance(req, res, query);

@@ -37,6 +37,9 @@
       </button>
 
       <div class="nav-label">Gestão</div>
+      <button class="nav-item" data-nav="employees">
+        <span class="nav-icon">👥</span> Equipe
+      </button>
       <button class="nav-item" data-nav="finance">
         <span class="nav-icon">💰</span> Financeiro
       </button>
@@ -76,6 +79,7 @@
       <span id="polling-indicator"
         style="font-size:.72rem;color:var(--success);opacity:0;transition:opacity .3s;display:flex;align-items:center;gap:5px"></span>
       <a href="/kitchen" class="btn btn-ghost btn-sm" target="_blank" id="link-kitchen">👨‍🍳 Cozinha</a>
+      <a href="/waiter" class="btn btn-ghost btn-sm" id="link-waiter-back" hidden>🙋 Painel do garçom</a>
       <a href="/?mesa=1"  class="btn btn-ghost btn-sm" target="_blank">📱 Cardápio</a>
     </div>
   </header>
@@ -240,6 +244,53 @@
       <div class="tables-grid" id="accounts-grid">
         <div class="empty-state" style="grid-column:1/-1"><div class="empty-state-desc">Carregando…</div></div>
       </div>
+    </section>
+
+    <!-- ── EQUIPE ── -->
+    <section id="section-employees" class="section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Equipe</h2>
+          <p class="section-subtitle">Garçons e cozinha · cadastro, acesso e desempenho</p>
+        </div>
+        <button class="btn btn-primary" id="btn-new-employee">+ Cadastrar funcionário</button>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="employees-search" placeholder="Buscar por nome ou usuário…" />
+          </div>
+          <div class="filter-tabs">
+            <button class="filter-tab emp-status-filter-tab active" data-status="all">Todos</button>
+            <button class="filter-tab emp-status-filter-tab" data-status="active">Ativos</button>
+            <button class="filter-tab emp-status-filter-tab" data-status="inactive">Inativos</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Funcionário</th>
+              <th>Função</th>
+              <th>Atendimentos</th>
+              <th>Cadastro</th>
+              <th>Ativo</th>
+              <th style="width:190px">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="employees-tbody">
+            <tr><td colspan="6">
+              <div class="empty-state" style="padding:40px">
+                <div class="empty-state-desc">Carregando…</div>
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="data-note">
+        Garçom não vê dados de outros funcionários, financeiro nem analytics — só os chamados. Desativar encerra o acesso imediatamente e preserva todo o histórico.
+      </p>
     </section>
 
     <!-- ── FINANCEIRO ── -->
@@ -480,8 +531,9 @@
               </div>
             </div>
             <p style="font-size:.72rem;color:var(--text-muted);margin-top:8px">
-              Garçons: defina WAITERS=nome:senha,nome2:senha2 no servidor. Eles acessam Chamados, Contas e Pedidos.<br>
-              Para alterar credenciais, use variáveis de ambiente no servidor.
+              Garçons e cozinha agora são cadastrados na tela <b>Equipe</b>, no menu Gestão — ativação, edição e histórico ficam lá.<br>
+              A variável WAITERS=nome:senha,nome2:senha2 continua funcionando como bootstrap inicial, se preferir.<br>
+              Para alterar as credenciais do administrador, use variáveis de ambiente no servidor.
             </p>
           </div>
         </div>
@@ -548,6 +600,79 @@
   </div>
 </div>
 
+<!-- ══ MODAL FUNCIONÁRIO (CADASTRO/EDIÇÃO) ══ -->
+<div class="modal-overlay" id="employee-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="emp-modal-title">Cadastrar funcionário</h3>
+      <button class="modal-close" id="btn-close-emp-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="emp-form" onsubmit="return false">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Nome *</label>
+            <input id="emp-field-name" class="form-control" type="text" placeholder="Ex: João Silva" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Usuário (login) *</label>
+              <input id="emp-field-username" class="form-control" type="text" placeholder="joao" autocomplete="off" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Função *</label>
+              <select id="emp-field-role" class="form-control">
+                <option value="waiter">Garçom</option>
+                <option value="kitchen">Cozinha</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Senha *</label>
+              <input id="emp-field-password" class="form-control" type="password" placeholder="Senha" autocomplete="new-password" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Telefone</label>
+              <input id="emp-field-phone" class="form-control" type="text" placeholder="(00) 00000-0000" />
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-cancel-emp-modal">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-employee">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL DETALHE DO FUNCIONÁRIO ══ -->
+<div class="modal-overlay" id="employee-detail-modal">
+  <div class="modal" style="max-width:760px">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title" id="emp-detail-name">Funcionário</h3>
+        <p class="section-subtitle" style="margin:2px 0 0"><span id="emp-detail-role"></span> · <span id="emp-detail-status"></span></p>
+      </div>
+      <button class="modal-close" id="btn-close-emp-detail">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="section-subtitle" style="margin-bottom:8px">Indicadores objetivos · <span id="emp-detail-range-label"></span></p>
+      <div id="emp-detail-period"></div>
+      <div class="kpi-grid" id="emp-detail-kpis" style="margin:14px 0"></div>
+      <div class="card-title">Histórico de chamados no período</div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Mesa</th><th>Status</th><th>Chamado em</th><th>Assumido</th><th>Concluído</th></tr></thead>
+          <tbody id="emp-detail-history"></tbody>
+        </table>
+      </div>
+      <p class="data-note">Métricas objetivas, sem ranking ou nota — a leitura é do gerente. Chamados incompletos não entram na média de tempo de atendimento.</p>
+    </div>
+  </div>
+</div>
+
 <script src="/js/config.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/ui.js"></script>
@@ -557,6 +682,7 @@
 <script src="/js/settings.js"></script>
 <script src="/js/calls.js"></script>
 <script src="/js/accounts.js"></script>
+<script src="/js/employees.js"></script>
 <script src="/js/finance.js"></script>
 <script src="/js/analytics.js"></script>
 <script src="/js/app.js"></script>

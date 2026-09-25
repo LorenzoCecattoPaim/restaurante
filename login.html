@@ -63,7 +63,11 @@
 </div>
 <script>
   const API_URL = (window.API_BASE_URL||'').replace(/\/$/,'');
-  if (localStorage.getItem('rs_token')) window.location.href='/admin.html';
+  function landingFor(role){ return role==='kitchen' ? '/kitchen.html' : role==='waiter' ? '/waiter.html' : '/admin.html'; }
+  if (localStorage.getItem('rs_token')) {
+    const cached = JSON.parse(localStorage.getItem('rs_user')||'{}');
+    window.location.href = landingFor(cached.role);
+  }
 
   function showErr(m){ const e=document.getElementById('err'); document.getElementById('err-txt').textContent=m; e.style.display='flex'; }
   function hideErr(){ document.getElementById('err').style.display='none'; }
@@ -80,7 +84,7 @@
       if(!res.ok) throw new Error(data.error||'Credenciais inválidas');
       localStorage.setItem('rs_token', data.data.token);
       localStorage.setItem('rs_user',  JSON.stringify(data.data.user));
-      window.location.href = data.data.user.role==='kitchen' ? '/kitchen.html' : '/admin.html';
+      window.location.href = landingFor(data.data.user.role);
     }catch(e){ showErr(e.message); setLoad(false); document.getElementById('p').select(); }
   }
 

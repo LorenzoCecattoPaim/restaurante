@@ -7,7 +7,7 @@ const App = (() => {
 
   // Telas liberadas por perfil (o servidor também valida cada rota)
   const ROLE_SECTIONS = {
-    admin:   ['dashboard', 'orders', 'calls', 'accounts', 'finance', 'analytics', 'products', 'settings'],
+    admin:   ['dashboard', 'orders', 'calls', 'accounts', 'employees', 'finance', 'analytics', 'products', 'settings'],
     kitchen: ['dashboard', 'orders', 'products', 'settings'],
     waiter:  ['calls', 'accounts', 'orders'],
   };
@@ -67,6 +67,7 @@ const App = (() => {
       settings:  'Configurações',
       calls:     'Chamados',
       accounts:  'Contas',
+      employees: 'Equipe',
       finance:   'Financeiro',
       analytics: 'Análises',
     };
@@ -80,6 +81,7 @@ const App = (() => {
     if (section === 'settings')  Settings.load();
     if (section === 'calls')     Calls.load();
     if (section === 'accounts')  Accounts.load();
+    if (section === 'employees') Employees.load();
     if (section === 'finance')   Finance.load();
     if (section === 'analytics') Analytics.load();
   }
@@ -108,7 +110,10 @@ const App = (() => {
     if (nameEl) nameEl.textContent = user.name || 'Admin';
     if (roleEl) roleEl.textContent = ROLE_LABEL[user.role] || 'Cozinha';
     applyRoleNav();
-    if (user.role === 'waiter') { const k = qs('#link-kitchen'); if (k) k.hidden = true; }
+    if (user.role === 'waiter') {
+      const k = qs('#link-kitchen'); if (k) k.hidden = true;
+      const w = qs('#link-waiter-back'); if (w) w.hidden = false;
+    }
     const avatar = qs('#user-avatar');
     if (avatar) avatar.textContent = (user.name || 'A')[0].toUpperCase();
 
@@ -126,6 +131,7 @@ const App = (() => {
     if (can('settings'))  inits.push(Settings.init());
     if (can('calls'))     inits.push(Calls.init());
     if (can('accounts'))  inits.push(Accounts.init());
+    if (can('employees')) inits.push(Employees.init());
     if (can('finance'))   Finance.init();
     if (can('analytics')) Analytics.init();
     await Promise.all(inits);

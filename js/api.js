@@ -102,6 +102,14 @@ const API = {
     list: q           => request('GET',  `/payments?${q}`),
     void: (id, reason)=> request('POST', `/payments/${id}/void`, { reason }, 0),
   },
+  employees: {
+    list:       ()          => request('GET',  '/employees'),
+    detail:     (id, q)     => request('GET',  `/employees/${id}?${q}`),
+    create:     d           => request('POST', '/employees', d),
+    update:     (id, d)     => request('PUT',  `/employees/${id}`, d),
+    activate:   id          => request('POST', `/employees/${id}/activate`,   null, 0),
+    deactivate: id          => request('POST', `/employees/${id}/deactivate`, null, 0),
+  },
   finance:   { get: q => request('GET', `/finance?${q}`) },
   overview:  { get: q => request('GET', `/overview?${q}`) },
   analytics: {

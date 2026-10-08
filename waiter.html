@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>RestaurOS — Garçom</title>
+  <title>PedeMesa — Garçom</title>
   <script src="/js/config.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
@@ -48,7 +48,7 @@
 </head>
 <body>
 <header class="wt-header">
-  <div class="wt-logo"><div class="wt-logo-icon">🙋</div>RestaurOS · Garçom</div>
+  <div class="wt-logo"><div class="wt-logo-icon">🙋</div>PedeMesa · Garçom</div>
   <div class="wt-hello" id="hello"></div>
   <div class="wt-meta">
     <div class="wt-live">Ao vivo</div>
@@ -158,7 +158,7 @@ async function fetchCalls(){
     const data = await res.json();
     const list = data.data||[];
     const newPending = list.filter(c=>c.status==='pending'&&!_known.has(c.id));
-    if(newPending.length && _known.size>0){ playAlert(); document.title=`🔔 ${newPending.length} chamado(s)`; setTimeout(()=>{document.title='RestaurOS — Garçom';},3000); }
+    if(newPending.length && _known.size>0){ playAlert(); document.title=`🔔 ${newPending.length} chamado(s)`; setTimeout(()=>{document.title='PedeMesa — Garçom';},3000); }
     list.forEach(c=>_known.add(c.id));
     _calls = list;
     render();

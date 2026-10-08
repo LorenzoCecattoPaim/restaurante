@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#c9472a" />
+  <meta name="theme-color" content="#0E2A47" />
   <meta name="description" content="Cardápio digital — faça seu pedido direto da mesa" />
-  <title>Cardápio</title>
+  <title>Cardápio · PedeMesa</title>
   <link rel="stylesheet" href="/css/menu.css" />
   <!-- config.js define window.API_BASE_URL antes do api.js -->
   <script src="/js/config.js"></script>
@@ -13,8 +13,10 @@
 <body>
 
 <!-- ── Header ─────────────────────────────────────────────────── -->
+<!-- "PedeMesa" é a marca/plataforma — fixa, não vem do banco.
+     O nome do estabelecimento aparece logo abaixo, no hero. -->
 <header class="menu-header">
-  <div class="menu-logo" id="restaurant-name">🍽️ RestaurOS</div>
+  <div class="menu-brand">PedeMesa</div>
   <button class="cart-btn" id="cart-open-btn">
     🛒 <span id="cart-label">Pedido</span>
     <span class="cart-badge" id="cart-count">0</span>
@@ -24,7 +26,7 @@
 <!-- ── Hero ──────────────────────────────────────────────────── -->
 <div class="menu-hero">
   <h1 id="hero-title">Cardápio</h1>
-  <p>Escolha seus pratos e faça seu pedido direto da mesa</p>
+  <p id="hero-subtitle">Cardápio Digital</p>
   <div class="table-chip" id="table-chip">📍 Identificando mesa…</div>
 </div>
 
@@ -303,14 +305,14 @@ async function loadMenu() {
     const [{ data: products }, { data: categories }, { data: settings }] = await Promise.all([
       apiFetch('/products'),
       apiFetch('/categories'),
-      apiFetch('/settings').catch(() => ({ data: { restaurantName: 'RestaurOS' } })),
+      apiFetch('/settings').catch(() => ({ data: { restaurantName: 'Restaurante' } })),
     ]);
 
-    // Nome do restaurante
-    const rName = settings.restaurantName || 'RestaurOS';
-    document.getElementById('restaurant-name').textContent = `🍽️ ${rName}`;
-    document.getElementById('hero-title').textContent      = rName;
-    document.title = rName;
+    // "PedeMesa" (marca/plataforma) já está fixo no cabeçalho em HTML.
+    // Aqui só entra o nome do ESTABELECIMENTO, vindo das configurações reais.
+    const rName = settings.restaurantName || 'Restaurante';
+    document.getElementById('hero-title').textContent = rName;
+    document.title = `${rName} · PedeMesa`;
 
     _products = products.filter(p => p.active);
 

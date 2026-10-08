@@ -1,4 +1,4 @@
-# RestaurOS — Frontend (Vercel)
+# PedeMesa — Frontend (Vercel)
 
 Interface completa do sistema: cardápio, admin, cozinha e login.  
 HTML + CSS + JavaScript puro — zero dependências, zero build step.
@@ -25,7 +25,7 @@ const CONFIG = {
 ```bash
 git init
 git add .
-git commit -m "feat: RestaurOS frontend"
+git commit -m "feat: PedeMesa frontend"
 git branch -M main
 git remote add origin https://github.com/SEU_USUARIO/restauros-frontend.git
 git push -u origin main

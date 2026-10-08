@@ -62,7 +62,7 @@ function buildSeed() {
       { id:2, username: process.env.KITCHEN_USER   || 'cozinha', password: process.env.KITCHEN_PASS   || 'Lore4545!', role:'kitchen', name:'Cozinha', active:true, phone:'', createdAt:now },
     ],
     settings: {
-      restaurantName: process.env.RESTAURANT_NAME || 'RestaurOS',
+      restaurantName: process.env.RESTAURANT_NAME || 'Meu Restaurante', // nome do ESTABELECIMENTO — "PedeMesa" é a marca da plataforma, nunca o fallback aqui
       address:        process.env.RESTAURANT_ADDR || '',
       phone:          process.env.RESTAURANT_PHONE || '',
       openTime:  '11:00',

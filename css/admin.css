@@ -1,5 +1,5 @@
 /* ============================================================
-   admin.css — Design System RestaurOS
+   admin.css — Design System PedeMesa
    Estética: Dark SaaS Premium — minimalismo funcional
    ============================================================ */
 
@@ -14,11 +14,13 @@
   --bg-active:    #2a2b33;
 
   --border:       #2a2b35;
-  --border-focus: #4f6ef7;
+  --border-focus: #3D7DC4;
 
-  --accent:       #4f6ef7;
-  --accent-dim:   #3a56d4;
-  --accent-glow:  rgba(79, 110, 247, 0.15);
+  /* Mesma família de azul da marca PedeMesa (#0E2A47), só que mais
+     clara/saturada para ter contraste no fundo escuro do painel. */
+  --accent:       #3D7DC4;
+  --accent-dim:   #2C5E97;
+  --accent-glow:  rgba(61, 125, 196, 0.15);
 
   --success:      #22c55e;
   --warning:      #f59e0b;

@@ -257,7 +257,7 @@ const Orders = (() => {
   .note{background:#fff3cd;border:1px solid #ffc107;padding:4px 8px;margin:8px 0;font-size:12px}
   @media print{body{padding:0}}
 </style></head><body>
-<h1>🍽️ RestaurOS</h1>
+<h1>🍽️ PedeMesa</h1>
 <div class="info">
   <div class="row"><span>Pedido:</span><b>#${String(o.id).padStart(4,'0')}</b></div>
   <div class="row"><span>Mesa:</span><b>${esc(o.tableNumber)}</b></div>

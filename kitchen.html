@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>RestaurOS — Cozinha</title>
+  <title>PedeMesa — Cozinha</title>
   <script src="/js/config.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
@@ -64,7 +64,7 @@
 <header class="kds-header">
   <div class="kds-logo">
     <div class="kds-logo-icon">👨‍🍳</div>
-    RestaurOS · Cozinha
+    PedeMesa · Cozinha
   </div>
   <div class="kds-meta">
     <div class="kds-live">Ao vivo</div>
@@ -145,7 +145,7 @@ async function fetchOrders(){
     if(res.status===401){window.location.href='/login.html';return;}
     const data=await res.json(), list=data.data||[];
     const newOnes=list.filter(o=>o.status==='recebido'&&!_known.has(o.id));
-    if(newOnes.length&&_known.size>0){playNewOrder();document.title=`🔔 ${newOnes.length} novo(s)`;setTimeout(()=>{document.title='RestaurOS — Cozinha';},3000);}
+    if(newOnes.length&&_known.size>0){playNewOrder();document.title=`🔔 ${newOnes.length} novo(s)`;setTimeout(()=>{document.title='PedeMesa — Cozinha';},3000);}
     list.forEach(o=>_known.add(o.id));
     _orders=list; render();
   }catch{}

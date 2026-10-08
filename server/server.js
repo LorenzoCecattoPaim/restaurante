@@ -136,7 +136,7 @@ process.on('unhandledRejection', err => console.error('❌ unhandledRejection:',
 // ─── Start ────────────────────────────────────────────────────
 initDB(() => {
   server.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n🍽️  RestaurOS API — http://localhost:${PORT}`);
+    console.log(`\n🍽️  PedeMesa API — http://localhost:${PORT}`);
     console.log(`   💚 Health  → http://localhost:${PORT}/health`);
     console.log(`   🔌 API     → http://localhost:${PORT}/api/`);
     console.log(`   🌐 CORS    → ${ALLOWED_ORIGIN}`);

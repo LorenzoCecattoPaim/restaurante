@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0E2A47" />
   <meta name="description" content="Cardápio digital — faça seu pedido direto da mesa" />
   <title>Cardápio · PedeMesa</title>
@@ -340,7 +340,7 @@ async function loadMenu() {
           <h2 class="category-title">${cat}</h2>
           <div class="products-list">
             ${catProducts.map(p => `
-              <article class="product-card" onclick="handleAdd(${p.id})">
+              <article class="product-card" tabindex="0" role="button" aria-label="Adicionar ${p.name} ao pedido" onclick="handleAdd(${p.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleAdd(${p.id})}">
                 <div class="product-card-img-wrap">
                   ${p.image
                     ? `<img class="product-card-img" src="${p.image}" alt="${p.name}" loading="lazy"

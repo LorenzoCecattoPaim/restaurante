@@ -168,7 +168,7 @@ input, textarea, select { font-family: inherit; }
 .nav-item.active {
   background: var(--accent-glow);
   color: var(--accent);
-  border: 1px solid rgba(79, 110, 247, .2);
+  border: 1px solid rgba(61, 125, 196, .2);
 }
 
 .nav-item.active .nav-icon { opacity: 1; }
@@ -207,7 +207,7 @@ input, textarea, select { font-family: inherit; }
 .sidebar-user-avatar {
   width: 32px; height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  background: linear-gradient(135deg, var(--accent), var(--accent-dim));
   display: grid;
   place-items: center;
   font-size: .75rem;
@@ -319,7 +319,7 @@ input, textarea, select { font-family: inherit; }
   margin-bottom: 14px;
 }
 
-.stat-icon.blue   { background: rgba(79,110,247,.15); }
+.stat-icon.blue   { background: rgba(61,125,196,.15); }
 .stat-icon.green  { background: rgba(34,197,94,.12); }
 .stat-icon.amber  { background: rgba(245,158,11,.12); }
 .stat-icon.red    { background: rgba(239,68,68,.12); }
@@ -688,7 +688,7 @@ select.form-control {
 }
 
 .order-card:hover {
-  border-color: rgba(79,110,247,.3);
+  border-color: rgba(61,125,196,.3);
   transform: translateY(-2px);
 }
 
@@ -890,6 +890,22 @@ select.form-control {
 .empty-state-title { font-size: .9rem; font-weight: 600; color: var(--text-secondary); }
 .empty-state-desc  { font-size: .8rem; }
 
+/* ─── Spinner (botões em estado "carregando") ───────────────
+   Mesmo helper setLoading() de sempre — só ganhou um ícone girando
+   em vez de só trocar o texto. */
+.btn-spinner {
+  display: inline-block;
+  width: 13px; height: 13px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  opacity: .8;
+  vertical-align: -2px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ─── Loading skeleton ───────────────────────────────────── */
 .skeleton {
   background: linear-gradient(90deg, var(--bg-raised) 25%, var(--bg-hover) 50%, var(--bg-raised) 75%);
@@ -980,6 +996,10 @@ select.form-control {
   .app-layout { grid-template-columns: 1fr; }
   .sidebar    { display: none; }
   .app-main   { padding: 16px; }
+  /* Área de toque confortável no celular — no desktop o botão
+     pode ser mais compacto (precisão do mouse). */
+  .btn:not(.btn-sm) { min-height: 42px; }
+  .form-control      { min-height: 42px; }
 }
 
 /* ─── Category chips ─────────────────────────────────────── */

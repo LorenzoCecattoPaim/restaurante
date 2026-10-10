@@ -55,7 +55,7 @@ body {
   color: var(--text);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  padding-bottom: 80px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 }
 img { display: block; max-width: 100%; }
 button { cursor: pointer; font-family: inherit; }
@@ -93,6 +93,7 @@ input  { font-family: inherit; }
   border: none;
   border-radius: 99px;
   padding: 8px 16px;
+  min-height: 40px;
   font-size: .82rem;
   font-weight: 700;
   transition: all .15s;
@@ -290,12 +291,16 @@ input  { font-family: inherit; }
 }
 
 .add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--secondary-bg);
   color: var(--secondary-dark);
   border: 1px solid rgba(var(--secondary-rgb),.25);
   border-radius: 99px;
-  padding: 5px 14px;
-  font-size: .76rem;
+  padding: 5px 16px;
+  min-height: 40px;
+  font-size: .78rem;
   font-weight: 700;
   transition: all .12s;
   white-space: nowrap;
@@ -330,7 +335,7 @@ input  { font-family: inherit; }
   margin: 0 auto;
   max-height: 90vh;
   overflow-y: auto;
-  padding: 0 0 24px;
+  padding: 0 0 calc(24px + env(safe-area-inset-bottom, 0px));
   animation: drawer-up .3s cubic-bezier(.4,0,.2,1);
 }
 
@@ -359,8 +364,8 @@ input  { font-family: inherit; }
 .cart-drawer-close {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  width: 28px; height: 28px;
+  border-radius: 8px;
+  width: 36px; height: 36px;
   display: grid;
   place-items: center;
   font-size: 14px;
@@ -387,7 +392,7 @@ input  { font-family: inherit; }
   transition: border-color .15s;
 }
 
-.cart-input:focus { border-color: var(--accent); }
+.cart-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--primary-rgb),.12); }
 .cart-input::placeholder { color: var(--text-muted); }
 
 .cart-items {
@@ -427,7 +432,7 @@ input  { font-family: inherit; }
 }
 
 .qty-btn {
-  width: 28px; height: 28px;
+  width: 34px; height: 34px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: var(--bg);
@@ -597,6 +602,29 @@ input  { font-family: inherit; }
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(10px) scale(.95); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Foco de teclado ──────────────────────────────────────────
+   Cobertura geral: qualquer elemento interativo navegado por
+   teclado precisa de um indicador visível (não só os que já
+   tinham outline manual). Em botões com fundo colorido, o anel
+   escurece para continuar visível sobre a própria cor. */
+button:focus-visible,
+.product-card:focus-visible,
+.cart-input:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.cart-btn:focus-visible,
+.checkout-btn:focus-visible,
+.success-btn:focus-visible,
+.add-btn:hover:focus-visible,
+.qty-btn:hover:focus-visible {
+  outline-color: #fff;
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb),.45);
 }
 
 /* ── Scrollbar ────────────────────────────────────────────── */

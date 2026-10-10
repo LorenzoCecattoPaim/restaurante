@@ -119,7 +119,7 @@ function qsa(sel, parent = document) { return Array.from(parent.querySelectorAll
 function setLoading(btn, loading) {
   if (loading) {
     btn._orig = btn.innerHTML;
-    btn.innerHTML = '<span style="opacity:.6">Aguarde…</span>';
+    btn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span> <span style="opacity:.75">Aguarde…</span>';
     btn.disabled  = true;
   } else {
     btn.innerHTML = btn._orig || btn.innerHTML;
